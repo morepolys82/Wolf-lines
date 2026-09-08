@@ -636,4 +636,857 @@
           </h2>
           <div class="player-list-scroll-wrapper">
             <div id="playerList" class="player-list">
-              <div class="loading">Loading p
+              <div class="loading">Loading players...</div>
+            </div>
+          </div>
+          <div class="attendance-legend">
+            <span class="legend-item"><span class="legend-dot green"></span> Attending</span>
+            <span class="legend-item"><span class="legend-dot yellow"></span> Maybe</span>
+            <span class="legend-item"><span class="legend-dot grey"></span> No answer</span>
+            <span class="legend-item"><span class="legend-dot red"></span> Not attending</span>
+            <span class="legend-item"><span class="legend-dot blue"></span> Goalie</span>
+          </div>
+          <div class="pool-actions">
+            <button id="resetPlayersBtn" class="reset-btn">↺ Reset roster</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINES -->
+      <div class="lines-container">
+        <!-- FORWARDS -->
+        <div class="section">
+          <div class="section-header">
+            <h2>Forward lines</h2>
+            <span>3x3</span>
+          </div>
+          <div id="forwardsGrid" class="grid grid-forwards">
+            <!-- 9 cells -->
+          </div>
+        </div>
+
+        <!-- DEFENSE (3x2) -->
+        <div class="section">
+          <div class="section-header">
+            <h2>Defense pairs</h2>
+            <span>3x2</span>
+          </div>
+          <div id="defenseGrid" class="grid grid-defense">
+            <!-- 6 cells: 3 rows, 2 columns -->
+          </div>
+        </div>
+
+        <div class="footer">
+          <button id="autoBtn" class="reset-btn auto-btn">🎲 Auto Generate</button>
+          <button id="copyBtn" class="reset-btn copy-btn">📋 Copy</button>
+          <button id="clearAllBtn" class="reset-btn clear-btn">🧹 Clear all lines</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast">✅ Copied to clipboard!</div>
+
+  <script>
+    (function() {
+      // ----- STORAGE KEYS -----
+      const STORAGE_KEY_FORWARDS = 'wolfpac_lines_forwards';
+      const STORAGE_KEY_DEFENSE = 'wolfpac_lines_defense';
+      const STORAGE_KEY_URL = 'wolfpac_roster_url';
+
+      // ----- DEFAULT URL -----
+      const DEFAULT_URL = 'https://canlan2-api.sportninja.net/v1/games/RBGm0IbGAwKwtxec/rosters/LOan2oLndGzuGXO4';
+
+      // ----- STATE -----
+      let allPlayers = [];
+      let playerStatusMap = {};
+      let playerGoalieMap = {};
+      let forwards = Array(9).fill(null);
+      let defense = Array(6).fill(null);
+      let isLoading = true;
+      let isFetching = false;
+      let saveTimeout = null;
+      let autoFetchTimeout = null;
+      let lastFetchTime = 0;
+      const FETCH_THROTTLE_MS = 1500;
+
+      // DOM refs
+      const playerListEl = document.getElementById('playerList');
+      const forwardsGridEl = document.getElementById('forwardsGrid');
+      const defenseGridEl = document.getElementById('defenseGrid');
+      const resetBtn = document.getElementById('resetPlayersBtn');
+      const clearAllBtn = document.getElementById('clearAllBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const autoBtn = document.getElementById('autoBtn');
+      const poolCountEl = document.getElementById('poolCount');
+      const toastEl = document.getElementById('toast');
+      const saveIndicator = document.getElementById('saveIndicator');
+      const rosterUrlInput = document.getElementById('rosterUrl');
+      const updateRosterBtn = document.getElementById('updateRosterBtn');
+      const urlStatusEl = document.getElementById('urlStatus');
+
+      // ----- DRAG STATE -----
+      let dragState = {
+        isDragging: false,
+        element: null,
+        name: null,
+        sourceType: null,
+        sourceIndex: null,
+        ghost: null,
+      };
+
+      // ----- SAVE/LOAD FUNCTIONS -----
+      function saveLines() {
+        try {
+          localStorage.setItem(STORAGE_KEY_FORWARDS, JSON.stringify(forwards));
+          localStorage.setItem(STORAGE_KEY_DEFENSE, JSON.stringify(defense));
+          saveIndicator.style.opacity = '1';
+          clearTimeout(saveTimeout);
+          saveTimeout = setTimeout(() => {
+            saveIndicator.style.opacity = '0.6';
+          }, 2000);
+        } catch (e) {
+          console.warn('Could not save to localStorage:', e);
+        }
+      }
+
+      function loadLines() {
+        try {
+          const savedForwards = localStorage.getItem(STORAGE_KEY_FORWARDS);
+          const savedDefense = localStorage.getItem(STORAGE_KEY_DEFENSE);
+
+          if (savedForwards) {
+            const parsed = JSON.parse(savedForwards);
+            if (Array.isArray(parsed) && parsed.length === 9) {
+              forwards = parsed;
+            }
+          }
+          if (savedDefense) {
+            const parsed = JSON.parse(savedDefense);
+            if (Array.isArray(parsed) && parsed.length === 6) {
+              defense = parsed;
+            }
+          }
+          return true;
+        } catch (e) {
+          console.warn('Could not load from localStorage:', e);
+          return false;
+        }
+      }
+
+      function clearSavedLines() {
+        try {
+          localStorage.removeItem(STORAGE_KEY_FORWARDS);
+          localStorage.removeItem(STORAGE_KEY_DEFENSE);
+        } catch (e) {
+          console.warn('Could not clear saved lines:', e);
+        }
+      }
+
+      function saveUrl(url) {
+        try {
+          localStorage.setItem(STORAGE_KEY_URL, url);
+        } catch (e) {
+          console.warn('Could not save URL:', e);
+        }
+      }
+
+      function loadUrl() {
+        try {
+          return localStorage.getItem(STORAGE_KEY_URL) || DEFAULT_URL;
+        } catch (e) {
+          return DEFAULT_URL;
+        }
+      }
+
+      // ----- API FETCH -----
+      async function fetchPlayers(url, isSilent = false) {
+        if (!url || isFetching) return;
+        isFetching = true;
+        lastFetchTime = Date.now();
+
+        const statusEl = urlStatusEl;
+        const btn = updateRosterBtn;
+
+        try {
+          if (!isSilent) {
+            statusEl.textContent = '⏳ Fetching roster...';
+            statusEl.className = 'url-status';
+            btn.classList.add('loading');
+            btn.textContent = '⏳ Loading...';
+          }
+
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+          const data = await response.json();
+
+          if (data.data && data.data.players) {
+            const players = data.data.players;
+            const newPlayers = players.map(p => p.name_first);
+            const newStatusMap = {};
+            const newGoalieMap = {};
+
+            players.forEach(p => {
+              const name = p.name_first;
+              newStatusMap[name] = p.attendance_status !== undefined ? p.attendance_status : null;
+
+              // Identify goalie from position fields
+              const posStr = String(
+                p.position || p.position_name || p.position_code || p.position_short || p.role || p.roster_position || ''
+              ).toLowerCase().trim();
+
+              const isGoalie = (
+                p.is_goalie === true ||
+                p.is_goalie === 1 ||
+                p.is_goalie === 'true' ||
+                posStr === 'g' ||
+                posStr === 'goalie' ||
+                posStr === 'goaltender' ||
+                posStr === 'goalkeeper'
+              );
+
+              newGoalieMap[name] = isGoalie;
+            });
+
+            allPlayers = newPlayers;
+            playerStatusMap = newStatusMap;
+            playerGoalieMap = newGoalieMap;
+
+            saveUrl(url);
+
+            // Reconcile current lines: keep placed players who are still in the roster
+            const playerSet = new Set(allPlayers);
+            let needsSave = false;
+
+            forwards = forwards.map(p => {
+              if (p && !playerSet.has(p)) {
+                needsSave = true;
+                return null;
+              }
+              return p;
+            });
+
+            defense = defense.map(p => {
+              if (p && !playerSet.has(p)) {
+                needsSave = true;
+                return null;
+              }
+              return p;
+            });
+
+            if (needsSave) {
+              saveLines();
+            }
+
+            statusEl.textContent = `✅ Loaded ${allPlayers.length} players`;
+            statusEl.className = 'url-status success';
+            isLoading = false;
+            renderAll();
+
+            if (!isSilent) {
+              showToast(`✅ Roster updated! ${allPlayers.length} players loaded.`);
+            }
+          } else {
+            throw new Error('Invalid data structure: missing players array');
+          }
+        } catch (error) {
+          console.error('Error fetching players:', error);
+          if (!isSilent) {
+            statusEl.textContent = `❌ Error: ${error.message}`;
+            statusEl.className = 'url-status error';
+            if (allPlayers.length === 0) {
+              playerListEl.innerHTML = `<div class="empty-pool-msg">⚠️ Failed to load roster. Please check the URL and try again.</div>`;
+            }
+            showToast('❌ Failed to load roster');
+          }
+        } finally {
+          isFetching = false;
+          if (!isSilent) {
+            btn.classList.remove('loading');
+            btn.textContent = '🔄 Update';
+          }
+        }
+      }
+
+      // Auto update trigger on interaction
+      function triggerAutoUpdate() {
+        if (dragState.isDragging || isFetching) return;
+        const now = Date.now();
+        const url = (rosterUrlInput.value || '').trim();
+        if (!url) return;
+
+        clearTimeout(autoFetchTimeout);
+        if (now - lastFetchTime > FETCH_THROTTLE_MS) {
+          fetchPlayers(url, true);
+        } else {
+          autoFetchTimeout = setTimeout(() => {
+            fetchPlayers(url, true);
+          }, FETCH_THROTTLE_MS - (now - lastFetchTime));
+        }
+      }
+
+      // ----- STATUS HELPER -----
+      function getPlayerClass(name) {
+        if (playerGoalieMap[name]) return 'status-goalie';
+        const status = playerStatusMap[name];
+        if (status === 0) return 'status-0';
+        if (status === 1) return 'status-1';
+        if (status === 2) return 'status-2';
+        return 'status-null';
+      }
+
+      // ----- SORT PLAYERS BY ATTENDANCE AND GOALIE POSITION -----
+      function sortPlayersByStatus(players) {
+        return players.slice().sort((a, b) => {
+          const isGoalieA = !!playerGoalieMap[a];
+          const isGoalieB = !!playerGoalieMap[b];
+
+          // Goalies are sorted at the very bottom
+          if (isGoalieA && !isGoalieB) return 1;
+          if (!isGoalieA && isGoalieB) return -1;
+
+          const statusA = playerStatusMap[a];
+          const statusB = playerStatusMap[b];
+          const getPriority = (status) => {
+            if (status === 0) return 0; // Attending
+            if (status === 2) return 1; // Maybe
+            if (status === null || status === undefined) return 2; // No answer
+            if (status === 1) return 3; // Not attending
+            return 2;
+          };
+          return getPriority(statusA) - getPriority(statusB);
+        });
+      }
+
+      // ----- AUTO GENERATE -----
+      function autoGenerate() {
+        if (allPlayers.length === 0) {
+          showToast('⚠️ No players loaded. Please update the roster first.');
+          return;
+        }
+
+        forwards = Array(9).fill(null);
+        defense = Array(6).fill(null);
+
+        // Skaters only (exclude goalies from auto-generated forward and defense lines)
+        let available = allPlayers.filter(p => !playerGoalieMap[p]);
+        if (available.length === 0) {
+          available = [...allPlayers];
+        }
+
+        for (let i = available.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [available[i], available[j]] = [available[j], available[i]];
+        }
+
+        let playerIndex = 0;
+        for (let i = 0; i < forwards.length; i++) {
+          if (playerIndex < available.length) {
+            forwards[i] = available[playerIndex++];
+          } else {
+            break;
+          }
+        }
+
+        for (let i = 0; i < defense.length; i++) {
+          if (playerIndex < available.length) {
+            defense[i] = available[playerIndex++];
+          } else {
+            break;
+          }
+        }
+
+        renderAll();
+        saveLines();
+        showToast('🎲 Lines auto-generated!');
+      }
+
+      // ----- COPY FUNCTION -----
+      function copyLines() {
+        function getFirstName(fullName) {
+          if (!fullName) return '';
+          return fullName.trim();
+        }
+
+        let forwardLines = [];
+        for (let row = 0; row < 3; row++) {
+          let line = [];
+          for (let col = 0; col < 3; col++) {
+            const index = row * 3 + col;
+            const player = forwards[index];
+            if (player) {
+              line.push(getFirstName(player));
+            }
+          }
+          if (line.length > 0) {
+            forwardLines.push(line.join(' '));
+          }
+        }
+
+        let defenseLines = [];
+        for (let row = 0; row < 3; row++) {
+          let pair = [];
+          for (let col = 0; col < 2; col++) {
+            const index = row * 2 + col;
+            const player = defense[index];
+            if (player) {
+              pair.push(getFirstName(player));
+            }
+          }
+          if (pair.length > 0) {
+            defenseLines.push(pair.join(' '));
+          }
+        }
+
+        let output = 'Lines for tonight:\n';
+        if (forwardLines.length > 0) {
+          output += forwardLines.join('\n');
+        }
+        if (defenseLines.length > 0) {
+          if (forwardLines.length > 0) output += '\n\n';
+          output += defenseLines.join('\n');
+        }
+
+        if (forwardLines.length === 0 && defenseLines.length === 0) {
+          showToast('⚠️ No players on the ice!');
+          return;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(output).then(() => {
+            showToast('✅ Copied to clipboard!');
+          }).catch(() => {
+            fallbackCopy(output);
+          });
+        } else {
+          fallbackCopy(output);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showToast('✅ Copied to clipboard!');
+        } catch (err) {
+          showToast('❌ Failed to copy. Please copy manually.');
+          console.error('Copy failed:', err);
+        }
+        document.body.removeChild(textarea);
+      }
+
+      let toastTimeout = null;
+      function showToast(message) {
+        toastEl.textContent = message;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toastEl.classList.remove('show');
+        }, 2500);
+      }
+
+      // ----- RENDER -----
+      function renderPlayerPool() {
+        if (isLoading) {
+          playerListEl.innerHTML = `<div class="loading">Loading players...</div>`;
+          return;
+        }
+
+        if (allPlayers.length === 0) {
+          playerListEl.innerHTML = `<div class="empty-pool-msg">No players loaded. Click "Update" to fetch roster.</div>`;
+          poolCountEl.textContent = '0';
+          return;
+        }
+
+        const placedNames = new Set();
+        forwards.forEach(p => { if (p) placedNames.add(p); });
+        defense.forEach(p => { if (p) placedNames.add(p); });
+
+        const available = allPlayers.filter(name => !placedNames.has(name));
+        poolCountEl.textContent = available.length;
+
+        if (available.length === 0) {
+          playerListEl.innerHTML = `<div class="empty-pool-msg">All players are on the ice 🏒</div>`;
+          return;
+        }
+
+        const sortedAvailable = sortPlayersByStatus(available);
+        let html = '';
+        sortedAvailable.forEach(name => {
+          const status = playerStatusMap[name];
+          const className = getPlayerClass(name);
+          html += `<div class="player-item ${className}" data-name="${name}" data-status="${status}">${name}</div>`;
+        });
+        playerListEl.innerHTML = html;
+
+        document.querySelectorAll('#playerList .player-item').forEach(el => {
+          el.addEventListener('mousedown', onDragStart);
+          el.addEventListener('touchstart', onDragStart, { passive: false });
+        });
+      }
+
+      function renderGrids() {
+        renderForwards();
+        renderDefense();
+      }
+
+      function renderForwards() {
+        let html = '';
+        for (let i = 0; i < forwards.length; i++) {
+          const player = forwards[i];
+          let content;
+          if (player) {
+            const className = getPlayerClass(player);
+            content = `<div class="player-item ${className}" data-name="${player}" data-cell-index="${i}" data-cell-type="forward">${player}</div>`;
+          } else {
+            content = `<span class="empty-cell">⬇ drop</span>`;
+          }
+          html += `<div class="cell" data-cell-type="forward" data-index="${i}">${content}</div>`;
+        }
+        forwardsGridEl.innerHTML = html;
+        attachCellEvents(forwardsGridEl);
+      }
+
+      function renderDefense() {
+        let html = '';
+        for (let i = 0; i < defense.length; i++) {
+          const player = defense[i];
+          let content;
+          if (player) {
+            const className = getPlayerClass(player);
+            content = `<div class="player-item ${className}" data-name="${player}" data-cell-index="${i}" data-cell-type="defense">${player}</div>`;
+          } else {
+            content = `<span class="empty-cell">⬇ drop</span>`;
+          }
+          html += `<div class="cell" data-cell-type="defense" data-index="${i}">${content}</div>`;
+        }
+        defenseGridEl.innerHTML = html;
+        attachCellEvents(defenseGridEl);
+      }
+
+      function attachCellEvents(container) {
+        container.querySelectorAll('.cell .player-item').forEach(el => {
+          el.addEventListener('mousedown', onDragStart);
+          el.addEventListener('touchstart', onDragStart, { passive: false });
+        });
+      }
+
+      // ----- DRAG START -----
+      function onDragStart(e) {
+        const el = e.target.closest('.player-item');
+        if (!el) return;
+
+        const name = el.dataset.name;
+        if (!name) return;
+
+        let startX, startY;
+        if (e.type === 'touchstart') {
+          const touch = e.touches[0];
+          startX = touch.clientX;
+          startY = touch.clientY;
+        } else {
+          startX = e.clientX;
+          startY = e.clientY;
+        }
+
+        const cell = el.closest('.cell');
+        let sourceType = null;
+        let sourceIndex = null;
+        if (cell) {
+          sourceType = cell.dataset.cellType;
+          sourceIndex = parseInt(cell.dataset.index, 10);
+        }
+
+        const ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        ghost.textContent = name;
+        ghost.style.display = 'none';
+        document.body.appendChild(ghost);
+
+        dragState.isDragging = false;
+        dragState.element = el;
+        dragState.name = name;
+        dragState.sourceType = sourceType;
+        dragState.sourceIndex = sourceIndex;
+        dragState.ghost = ghost;
+        dragState.startX = startX;
+        dragState.startY = startY;
+
+        el.classList.add('drag-source');
+
+        if (e.type === 'touchstart') {
+          document.addEventListener('touchmove', onTouchMove, { passive: false });
+          document.addEventListener('touchend', onTouchEnd, { passive: false });
+          document.addEventListener('touchcancel', onTouchEnd, { passive: false });
+        } else {
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        }
+      }
+
+      function onTouchMove(e) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - dragState.startX;
+        const dy = touch.clientY - dragState.startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > 10 && !dragState.isDragging) {
+          dragState.isDragging = true;
+          e.preventDefault();
+          dragState.ghost.style.display = 'block';
+          dragState.ghost.style.left = touch.clientX + 'px';
+          dragState.ghost.style.top = touch.clientY + 'px';
+        }
+
+        if (dragState.isDragging) {
+          e.preventDefault();
+          dragState.ghost.style.left = touch.clientX + 'px';
+          dragState.ghost.style.top = touch.clientY + 'px';
+
+          document.querySelectorAll('.cell').forEach(c => c.classList.remove('drag-over'));
+          const ghost = dragState.ghost;
+          ghost.style.display = 'none';
+          const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+          ghost.style.display = 'block';
+
+          const cell = elementBelow ? elementBelow.closest('.cell') : null;
+          if (cell) {
+            const cellType = cell.dataset.cellType;
+            const cellIndex = parseInt(cell.dataset.index, 10);
+            if (!(dragState.sourceType === cellType && dragState.sourceIndex === cellIndex)) {
+              cell.classList.add('drag-over');
+            }
+          }
+        }
+      }
+
+      function onMouseMove(e) {
+        if (!dragState.isDragging) {
+          const dx = e.clientX - dragState.startX;
+          const dy = e.clientY - dragState.startY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance > 5) {
+            dragState.isDragging = true;
+            dragState.ghost.style.display = 'block';
+            dragState.ghost.style.left = e.clientX + 'px';
+            dragState.ghost.style.top = e.clientY + 'px';
+          } else {
+            return;
+          }
+        }
+
+        dragState.ghost.style.left = e.clientX + 'px';
+        dragState.ghost.style.top = e.clientY + 'px';
+
+        document.querySelectorAll('.cell').forEach(c => c.classList.remove('drag-over'));
+        const ghost = dragState.ghost;
+        ghost.style.display = 'none';
+        const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+        ghost.style.display = 'block';
+
+        const cell = elementBelow ? elementBelow.closest('.cell') : null;
+        if (cell) {
+          const cellType = cell.dataset.cellType;
+          const cellIndex = parseInt(cell.dataset.index, 10);
+          if (!(dragState.sourceType === cellType && dragState.sourceIndex === cellIndex)) {
+            cell.classList.add('drag-over');
+          }
+        }
+      }
+
+      function onTouchEnd(e) {
+        if (dragState.isDragging) {
+          const touch = e.changedTouches ? e.changedTouches[0] : null;
+          if (touch) {
+            const ghost = dragState.ghost;
+            ghost.style.display = 'none';
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            ghost.style.display = 'block';
+
+            const cell = elementBelow ? elementBelow.closest('.cell') : null;
+            if (cell) {
+              const targetType = cell.dataset.cellType;
+              const targetIndex = parseInt(cell.dataset.index, 10);
+              if (!(dragState.sourceType === targetType && dragState.sourceIndex === targetIndex)) {
+                performMove(dragState.sourceType, dragState.sourceIndex, targetType, targetIndex, dragState.name);
+              }
+            } else {
+              if (dragState.sourceType !== null && dragState.sourceIndex !== null) {
+                removeFromLine(dragState.sourceType, dragState.sourceIndex);
+              }
+            }
+          }
+        }
+        cleanupDrag();
+        renderAll();
+        saveLines();
+
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+        document.removeEventListener('touchcancel', onTouchEnd);
+      }
+
+      function onMouseUp(e) {
+        if (dragState.isDragging) {
+          const ghost = dragState.ghost;
+          ghost.style.display = 'none';
+          const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+          ghost.style.display = 'block';
+
+          const cell = elementBelow ? elementBelow.closest('.cell') : null;
+          if (cell) {
+            const targetType = cell.dataset.cellType;
+            const targetIndex = parseInt(cell.dataset.index, 10);
+            if (!(dragState.sourceType === targetType && dragState.sourceIndex === targetIndex)) {
+              performMove(dragState.sourceType, dragState.sourceIndex, targetType, targetIndex, dragState.name);
+            }
+          } else {
+            if (dragState.sourceType !== null && dragState.sourceIndex !== null) {
+              removeFromLine(dragState.sourceType, dragState.sourceIndex);
+            }
+          }
+        }
+        cleanupDrag();
+        renderAll();
+        saveLines();
+
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+
+      function performMove(sourceType, sourceIndex, targetType, targetIndex, playerName) {
+        let targetArray = (targetType === 'forward') ? forwards : defense;
+        let sourceArray = null;
+
+        if (sourceType === 'forward') sourceArray = forwards;
+        else if (sourceType === 'defense') sourceArray = defense;
+
+        const targetOccupant = targetArray[targetIndex];
+
+        if (sourceArray !== null && sourceIndex !== null) {
+          if (sourceArray[sourceIndex] === playerName) {
+            if (targetOccupant !== null) {
+              sourceArray[sourceIndex] = targetOccupant;
+              targetArray[targetIndex] = playerName;
+            } else {
+              sourceArray[sourceIndex] = null;
+              targetArray[targetIndex] = playerName;
+            }
+          }
+        } else {
+          if (targetOccupant !== null) {
+            targetArray[targetIndex] = null;
+            targetArray[targetIndex] = playerName;
+          } else {
+            targetArray[targetIndex] = playerName;
+          }
+        }
+      }
+
+      function removeFromLine(sourceType, sourceIndex) {
+        if (sourceType === 'forward') {
+          forwards[sourceIndex] = null;
+        } else if (sourceType === 'defense') {
+          defense[sourceIndex] = null;
+        }
+      }
+
+      function cleanupDrag() {
+        if (dragState.ghost) {
+          dragState.ghost.remove();
+        }
+        if (dragState.element) {
+          dragState.element.classList.remove('drag-source');
+        }
+        document.querySelectorAll('.cell').forEach(c => c.classList.remove('drag-over'));
+        dragState.isDragging = false;
+        dragState.element = null;
+        dragState.name = null;
+        dragState.sourceType = null;
+        dragState.sourceIndex = null;
+        dragState.ghost = null;
+      }
+
+      function renderAll() {
+        renderPlayerPool();
+        renderGrids();
+      }
+
+      function resetRoster() {
+        if (allPlayers.length === 0) {
+          showToast('⚠️ No players loaded. Please update the roster first.');
+          return;
+        }
+        forwards = Array(9).fill(null);
+        defense = Array(6).fill(null);
+        renderAll();
+        saveLines();
+        showToast('↺ Roster reset');
+      }
+
+      function clearAllLines() {
+        forwards = Array(9).fill(null);
+        defense = Array(6).fill(null);
+        renderAll();
+        saveLines();
+        showToast('🧹 All lines cleared');
+      }
+
+      // ----- INIT -----
+      async function init() {
+        const savedUrl = loadUrl();
+        rosterUrlInput.value = savedUrl;
+
+        // Load persisted lines immediately from localStorage
+        loadLines();
+
+        // Set up event listeners
+        resetBtn.addEventListener('click', resetRoster);
+        clearAllBtn.addEventListener('click', clearAllLines);
+        copyBtn.addEventListener('click', copyLines);
+        autoBtn.addEventListener('click', autoGenerate);
+
+        updateRosterBtn.addEventListener('click', () => {
+          const url = rosterUrlInput.value.trim();
+          if (!url) {
+            urlStatusEl.textContent = '⚠️ Please enter a URL';
+            urlStatusEl.className = 'url-status error';
+            return;
+          }
+          fetchPlayers(url, false);
+        });
+
+        // Enter key on input triggers update
+        rosterUrlInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            updateRosterBtn.click();
+          }
+        });
+
+        // Auto update roster on user clicks / touch events
+        document.addEventListener('click', (e) => {
+          if (e.target.closest('#updateRosterBtn')) return;
+          triggerAutoUpdate();
+        });
+        document.addEventListener('touchend', (e) => {
+          if (e.target.closest('#updateRosterBtn')) return;
+          triggerAutoUpdate();
+        });
+
+        // Load initial roster
+        await fetchPlayers(savedUrl, false);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
