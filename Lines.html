@@ -694,8 +694,11 @@
       let forwards = Array(9).fill(null);
       let defense = Array(6).fill(null);
       let isLoading = true;
+      let isFetching = false;
       let saveTimeout = null;
-      let currentUrl = '';
+      let autoFetchTimeout = null;
+      let lastFetchTime = 0;
+      const FETCH_THROTTLE_MS = 1500; // Minimum interval between auto-fetches
 
       // DOM refs
       const playerListEl = document.getElementById('playerList');
@@ -787,15 +790,21 @@
       }
 
       // ----- API FETCH -----
-      async function fetchPlayers(url) {
+      async function fetchPlayers(url, isSilent = false) {
+        if (!url || isFetching) return;
+        isFetching = true;
+        lastFetchTime = Date.now();
+
         const statusEl = urlStatusEl;
         const btn = updateRosterBtn;
 
         try {
-          statusEl.textContent = '⏳ Fetching roster...';
-          statusEl.className = 'url-status';
-          btn.classList.add('loading');
-          btn.textContent = '⏳ Loading...';
+          if (!isSilent) {
+            statusEl.textContent = '⏳ Fetching roster...';
+            statusEl.className = 'url-status';
+            btn.classList.add('loading');
+            btn.textContent = '⏳ Loading...';
+          }
 
           const response = await fetch(url);
           if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -813,7 +822,6 @@
 
             allPlayers = newPlayers;
             playerStatusMap = newStatusMap;
-            currentUrl = url;
 
             saveUrl(url);
 
@@ -845,19 +853,46 @@
             statusEl.className = 'url-status success';
             isLoading = false;
             renderAll();
-            showToast(`✅ Roster updated! ${allPlayers.length} players loaded.`);
+
+            if (!isSilent) {
+              showToast(`✅ Roster updated! ${allPlayers.length} players loaded.`);
+            }
           } else {
             throw new Error('Invalid data structure: missing players array');
           }
         } catch (error) {
           console.error('Error fetching players:', error);
-          statusEl.textContent = `❌ Error: ${error.message}`;
-          statusEl.className = 'url-status error';
-          playerListEl.innerHTML = `<div class="empty-pool-msg">⚠️ Failed to load roster. Please check the URL and try again.</div>`;
-          showToast('❌ Failed to load roster');
+          if (!isSilent) {
+            statusEl.textContent = `❌ Error: ${error.message}`;
+            statusEl.className = 'url-status error';
+            if (allPlayers.length === 0) {
+              playerListEl.innerHTML = `<div class="empty-pool-msg">⚠️ Failed to load roster. Please check the URL and try again.</div>`;
+            }
+            showToast('❌ Failed to load roster');
+          }
         } finally {
-          btn.classList.remove('loading');
-          btn.textContent = '🔄 Update';
+          isFetching = false;
+          if (!isSilent) {
+            btn.classList.remove('loading');
+            btn.textContent = '🔄 Update';
+          }
+        }
+      }
+
+      // Auto update trigger on interaction
+      function triggerAutoUpdate() {
+        if (dragState.isDragging || isFetching) return;
+        const now = Date.now();
+        const url = (rosterUrlInput.value || '').trim();
+        if (!url) return;
+
+        clearTimeout(autoFetchTimeout);
+        if (now - lastFetchTime > FETCH_THROTTLE_MS) {
+          fetchPlayers(url, true);
+        } else {
+          autoFetchTimeout = setTimeout(() => {
+            fetchPlayers(url, true);
+          }, FETCH_THROTTLE_MS - (now - lastFetchTime));
         }
       }
 
@@ -1383,8 +1418,7 @@
             urlStatusEl.className = 'url-status error';
             return;
           }
-          // Fetch players without wiping existing line configurations
-          fetchPlayers(url);
+          fetchPlayers(url, false);
         });
 
         // Enter key on input triggers update
@@ -1394,8 +1428,18 @@
           }
         });
 
+        // Auto update roster on user clicks / touch events
+        document.addEventListener('click', (e) => {
+          if (e.target.closest('#updateRosterBtn')) return;
+          triggerAutoUpdate();
+        });
+        document.addEventListener('touchend', (e) => {
+          if (e.target.closest('#updateRosterBtn')) return;
+          triggerAutoUpdate();
+        });
+
         // Load initial roster
-        await fetchPlayers(savedUrl);
+        await fetchPlayers(savedUrl, false);
       }
 
       init();
