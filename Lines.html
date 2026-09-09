@@ -59,8 +59,123 @@
             flex-direction: column;
             gap: 1.5rem;
         }
-        /* -------- URL INPUT SECTION - VERTICAL LAYOUT -------- */
-        .url-section {
+        /* -------- NEXT GAME BANNER -------- */
+        .next-game-banner {
+            background: #1a3a4a;
+            border-radius: 1.8rem;
+            padding: 0.6rem 0.8rem;
+            box-shadow: inset 0 0 0 1px #2d5a6e;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .next-game-banner .nav-section {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .next-game-banner .nav-btn {
+            background: #1a2a3a;
+            border: 1px solid #3a5a6a;
+            color: #d4e3ef;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+            touch-action: manipulation;
+            flex-shrink: 0;
+        }
+        .next-game-banner .nav-btn:hover {
+            background: #2a4a5a;
+            border-color: #5a7a8a;
+        }
+        .next-game-banner .nav-btn:active {
+            transform: scale(0.92);
+        }
+        .next-game-banner .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .next-game-banner .game-info {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem 1rem;
+            font-size: 0.85rem;
+            flex: 1;
+            min-width: 0;
+        }
+        .next-game-banner .game-info .label {
+            color: #8aacbe;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .next-game-banner .game-info .teams {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+        .next-game-banner .game-info .teams .vs {
+            color: #6a8a9a;
+            font-weight: 300;
+            font-size: 0.7rem;
+        }
+        .next-game-banner .game-info .datetime {
+            color: #b6d0e0;
+            font-size: 0.7rem;
+        }
+        .next-game-banner .game-info .rink {
+            color: #8aacbe;
+            font-size: 0.65rem;
+            background: #1a2a3a;
+            padding: 0.1rem 0.6rem;
+            border-radius: 1rem;
+        }
+        .next-game-banner .game-counter {
+            color: #6a8a9a;
+            font-size: 0.6rem;
+            white-space: nowrap;
+        }
+        .next-game-banner .refresh-btn {
+            background: #2a4a5a;
+            border: none;
+            color: #d4e3ef;
+            padding: 0.25rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid #4a6a7a;
+            touch-action: manipulation;
+            white-space: nowrap;
+        }
+        .next-game-banner .refresh-btn:hover {
+            background: #3a5a6a;
+            border-color: #6a8a9a;
+        }
+        .next-game-banner .refresh-btn.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .next-game-banner .no-game {
+            color: #8aacbe;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        /* -------- URL INPUT SECTION - VERTICAL LAYOUT (BOTTOM) -------- */
+        .settings-section {
             background: #14222e;
             border-radius: 1.8rem;
             padding: 0.8rem 0.8rem 0.6rem;
@@ -69,13 +184,13 @@
             flex-direction: column;
             gap: 0.5rem;
         }
-        .url-section .url-label-row {
+        .settings-section .settings-row {
             display: flex;
-            align-items: center;
             gap: 0.5rem;
             flex-wrap: wrap;
+            align-items: center;
         }
-        .url-section label {
+        .settings-section label {
             font-size: 0.8rem;
             font-weight: 400;
             color: #b6d0e0;
@@ -83,15 +198,11 @@
             display: flex;
             align-items: center;
             gap: 0.3rem;
+            min-width: 70px;
         }
-        .url-section .url-input-row {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .url-section input {
+        .settings-section input {
             flex: 1;
-            min-width: 150px;
+            min-width: 120px;
             background: #1a2c3a;
             border: 1px solid #3a5a6e;
             border-radius: 2rem;
@@ -102,13 +213,13 @@
             outline: none;
             transition: border-color 0.15s;
         }
-        .url-section input:focus {
+        .settings-section input:focus {
             border-color: #6a9aaa;
         }
-        .url-section input::placeholder {
+        .settings-section input::placeholder {
             color: #5a7a8a;
         }
-        .url-section .update-btn {
+        .settings-section .update-btn {
             background: #1d6b4a;
             border: none;
             color: #d4e3ef;
@@ -122,28 +233,28 @@
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .url-section .update-btn:hover {
+        .settings-section .update-btn:hover {
             background: #2a8a5e;
             border-color: #3daf77;
         }
-        .url-section .update-btn:active {
+        .settings-section .update-btn:active {
             transform: scale(0.96);
         }
-        .url-section .update-btn.loading {
+        .settings-section .update-btn.loading {
             opacity: 0.6;
             pointer-events: none;
         }
-        .url-status {
+        .settings-section .settings-status {
             font-size: 0.65rem;
             color: #7a96aa;
             padding: 0.1rem 0.2rem;
             word-break: break-all;
             line-height: 1.4;
         }
-        .url-status.success {
+        .settings-section .settings-status.success {
             color: #3daf77;
         }
-        .url-status.error {
+        .settings-section .settings-status.error {
             color: #af5a5a;
         }
 
@@ -564,13 +675,18 @@
             .legend-dot { width: 8px; height: 8px; }
             .pool-count { font-size: 0.65rem; padding: 0.05rem 0.5rem; }
             .save-indicator { font-size: 0.5rem; }
-            .url-section { padding: 0.5rem 0.6rem; }
-            .url-section input { font-size: 0.7rem; padding: 0.35rem 0.6rem; }
-            .url-section .update-btn { font-size: 0.7rem; padding: 0.3rem 0.8rem; }
-            .url-section .url-input-row { flex-wrap: wrap; }
-            .url-section .url-input-row input { min-width: 120px; }
-            .url-section .url-input-row .update-btn { flex: 1; min-width: 80px; text-align: center; }
-            .url-status { font-size: 0.6rem; }
+            .settings-section { padding: 0.5rem 0.6rem; }
+            .settings-section input { font-size: 0.7rem; padding: 0.35rem 0.6rem; }
+            .settings-section .update-btn { font-size: 0.7rem; padding: 0.3rem 0.8rem; }
+            .settings-section .settings-row { flex-wrap: wrap; }
+            .settings-section .settings-row input { min-width: 100px; }
+            .settings-section .settings-row .update-btn { flex: 1; min-width: 80px; text-align: center; }
+            .settings-status { font-size: 0.6rem; }
+            .next-game-banner { padding: 0.4rem 0.5rem; flex-direction: column; align-items: stretch; gap: 0.3rem; }
+            .next-game-banner .game-info { font-size: 0.75rem; }
+            .next-game-banner .nav-section { align-self: center; }
+            .next-game-banner .refresh-btn { align-self: flex-end; }
+            .next-game-banner .nav-btn { width: 32px; height: 32px; font-size: 1rem; }
         }
         @media (max-width: 400px) {
             .grid-forwards { grid-template-columns: repeat(3, 1fr); }
@@ -580,9 +696,9 @@
             .player-list-scroll-wrapper { max-height: 120px; }
             .player-pool { max-height: 260px; }
             .player-item { font-size: 0.65rem; padding: 0.1rem 0.5rem; min-height: 22px; }
-            .url-section .url-input-row { flex-direction: column; }
-            .url-section .url-input-row input { width: 100%; min-width: unset; }
-            .url-section .url-input-row .update-btn { width: 100%; }
+            .settings-section .settings-row { flex-direction: column; }
+            .settings-section .settings-row input { width: 100%; min-width: unset; }
+            .settings-section .settings-row .update-btn { width: 100%; }
         }
         @media (min-width: 700px) {
             .main-grid {
@@ -614,7 +730,7 @@
             .player-item {
                 flex: 0 1 auto;
             }
-            .url-section .url-input-row {
+            .settings-section .settings-row {
                 flex-wrap: nowrap;
             }
         }
@@ -647,16 +763,17 @@
         </span>
     </h1>
 
-    <!-- URL INPUT SECTION - VERTICAL LAYOUT -->
-    <div class="url-section">
-        <div class="url-label-row">
-            <label for="rosterUrl">📡 Roster URL:</label>
+    <!-- NEXT GAME BANNER -->
+    <div id="nextGameBanner" class="next-game-banner">
+        <div class="nav-section">
+            <button id="prevGameBtn" class="nav-btn" title="Previous game">◀</button>
+            <span class="game-counter" id="gameCounter">0/0</span>
+            <button id="nextGameBtn" class="nav-btn" title="Next game">▶</button>
         </div>
-        <div class="url-input-row">
-            <input type="text" id="rosterUrl" placeholder="Paste roster API URL here..." />
-            <button id="updateRosterBtn" class="update-btn">🔄 Update</button>
+        <div class="game-info" id="gameInfo">
+            <span class="loading">Loading schedule...</span>
         </div>
-        <div id="urlStatus" class="url-status">Ready</div>
+        <button id="refreshScheduleBtn" class="refresh-btn">🔄 Refresh</button>
     </div>
 
     <div class="main-grid" id="appContent">
@@ -716,6 +833,20 @@
             </div>
         </div>
     </div>
+
+    <!-- SETTINGS SECTION - BOTTOM -->
+    <div class="settings-section" style="margin-top: 1.5rem;">
+        <div class="settings-row">
+            <label for="teamNameInput">🏷️ Team:</label>
+            <input type="text" id="teamNameInput" placeholder="Team name to filter..." value="Wolfpac" />
+        </div>
+        <div class="settings-row">
+            <label for="scheduleUrl">📡 Schedule URL:</label>
+            <input type="text" id="scheduleUrl" placeholder="Paste schedule API URL here..." />
+            <button id="updateScheduleBtn" class="update-btn">🔄 Update</button>
+        </div>
+        <div id="settingsStatus" class="settings-status">Ready</div>
+    </div>
 </div>
 
 <!-- Toast notification -->
@@ -726,20 +857,27 @@
         // ----- STORAGE KEYS -----
         const STORAGE_KEY_FORWARDS = 'wolfpac_lines_forwards';
         const STORAGE_KEY_DEFENSE = 'wolfpac_lines_defense';
-        const STORAGE_KEY_URL = 'wolfpac_roster_url';
+        const STORAGE_KEY_URL = 'wolfpac_schedule_url';
+        const STORAGE_KEY_TEAM = 'wolfpac_team_name';
 
-        // ----- DEFAULT URL -----
-        const DEFAULT_URL = 'https://canlan2-api.sportninja.net/v1/games/RBGm0IbGAwKwtxec/rosters/LOan2oLndGzuGXO4';
+        // ----- DEFAULT VALUES (UPDATED URL) -----
+        const DEFAULT_SCHEDULE_URL = 'https://canlan2-api.sportninja.net/v1/schedules/btm5NkDxsGpcoJaz/games?order=asc&exclude_cancelled_games=1&team_id=GAFNqGN5d9OKsYdO&include_officials=1&starts_after=2026-08-31T10%3A00%3A00.000Z&starts_before=2027-01-01T12%3A00%3A00.000Z&page=1';
+        const DEFAULT_TEAM_NAME = 'Wolfpac';
+        const GAME_API_BASE = 'https://canlan2-api.sportninja.net/v1/games/';
 
         // ----- STATE -----
         let allPlayers = [];
         let playerStatusMap = {};
-        let playerTypeMap = {}; // 'goalie' or 'skater'
+        let playerTypeMap = {};
         let forwards = Array(9).fill(null);
         let defense = Array(6).fill(null);
         let isLoading = true;
         let saveTimeout = null;
-        let currentUrl = '';
+        let currentScheduleUrl = '';
+        let teamName = DEFAULT_TEAM_NAME;
+        let wolfpacGames = [];
+        let currentGameIndex = -1;
+        let nextGameData = null;
 
         // DOM refs
         const playerListEl = document.getElementById('playerList');
@@ -752,9 +890,15 @@
         const poolCountEl = document.getElementById('poolCount');
         const toastEl = document.getElementById('toast');
         const saveIndicator = document.getElementById('saveIndicator');
-        const rosterUrlInput = document.getElementById('rosterUrl');
-        const updateRosterBtn = document.getElementById('updateRosterBtn');
-        const urlStatusEl = document.getElementById('urlStatus');
+        const scheduleUrlInput = document.getElementById('scheduleUrl');
+        const teamNameInput = document.getElementById('teamNameInput');
+        const updateScheduleBtn = document.getElementById('updateScheduleBtn');
+        const refreshScheduleBtn = document.getElementById('refreshScheduleBtn');
+        const prevGameBtn = document.getElementById('prevGameBtn');
+        const nextGameBtn = document.getElementById('nextGameBtn');
+        const gameCounterEl = document.getElementById('gameCounter');
+        const settingsStatusEl = document.getElementById('settingsStatus');
+        const gameInfoEl = document.getElementById('gameInfo');
 
         // ----- DRAG STATE -----
         let dragState = {
@@ -805,15 +949,6 @@
             }
         }
 
-        function clearSavedLines() {
-            try {
-                localStorage.removeItem(STORAGE_KEY_FORWARDS);
-                localStorage.removeItem(STORAGE_KEY_DEFENSE);
-            } catch (e) {
-                console.warn('Could not clear saved lines:', e);
-            }
-        }
-
         function saveUrl(url) {
             try {
                 localStorage.setItem(STORAGE_KEY_URL, url);
@@ -824,88 +959,264 @@
 
         function loadUrl() {
             try {
-                return localStorage.getItem(STORAGE_KEY_URL) || DEFAULT_URL;
+                return localStorage.getItem(STORAGE_KEY_URL) || DEFAULT_SCHEDULE_URL;
             } catch (e) {
-                return DEFAULT_URL;
+                return DEFAULT_SCHEDULE_URL;
             }
         }
 
-        // ----- API FETCH -----
-        async function fetchPlayers(url) {
-            const statusEl = urlStatusEl;
-            const btn = updateRosterBtn;
+        function saveTeamName(name) {
+            try {
+                localStorage.setItem(STORAGE_KEY_TEAM, name);
+            } catch (e) {
+                console.warn('Could not save team name:', e);
+            }
+        }
+
+        function loadTeamName() {
+            try {
+                return localStorage.getItem(STORAGE_KEY_TEAM) || DEFAULT_TEAM_NAME;
+            } catch (e) {
+                return DEFAULT_TEAM_NAME;
+            }
+        }
+
+        // ----- FORMAT DATE -----
+        function formatGameDate(dateString) {
+            const date = new Date(dateString);
+            const options = { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/Vancouver'
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // ----- UPDATE NAV BUTTONS -----
+        function updateNavButtons() {
+            if (wolfpacGames.length === 0) {
+                prevGameBtn.disabled = true;
+                nextGameBtn.disabled = true;
+                gameCounterEl.textContent = '0/0';
+                return;
+            }
+            prevGameBtn.disabled = currentGameIndex <= 0;
+            nextGameBtn.disabled = currentGameIndex >= wolfpacGames.length - 1;
+            gameCounterEl.textContent = `${currentGameIndex + 1}/${wolfpacGames.length}`;
+        }
+
+        // ----- LOAD GAME BY INDEX -----
+        async function loadGameByIndex(index) {
+            if (index < 0 || index >= wolfpacGames.length) return;
+            
+            const game = wolfpacGames[index];
+            currentGameIndex = index;
+            nextGameData = game;
+            
+            // Update banner
+            displayGameInfo(game);
+            updateNavButtons();
+            
+            // Fetch roster for this game
+            await fetchGameRoster(game.id);
+        }
+
+        // ----- DISPLAY GAME INFO -----
+        function displayGameInfo(game) {
+            const homeTeam = game.homeTeam ? game.homeTeam.name : 'TBD';
+            const awayTeam = game.visitingTeam ? game.visitingTeam.name : 'TBD';
+            const isTeamHome = game.homeTeam && game.homeTeam.name === teamName;
+            const opponent = isTeamHome ? awayTeam : homeTeam;
+            const location = isTeamHome ? '🏠 Home' : '✈️ Away';
+            const rink = game.venue ? game.venue.name : 'TBD';
+            const dateTime = formatGameDate(game.starts_at);
+
+            gameInfoEl.innerHTML = `
+                <span class="label">Game:</span>
+                <span class="teams">
+                    ${teamName} <span class="vs">vs</span> ${opponent}
+                    <span style="font-size:0.6rem;background:#2a4a5a;padding:0.05rem 0.5rem;border-radius:1rem;margin-left:0.2rem;">${location}</span>
+                </span>
+                <span class="datetime">${dateTime}</span>
+                <span class="rink">${rink}</span>
+            `;
+        }
+
+        // ----- FETCH SCHEDULE AND EXTRACT TEAM GAMES -----
+        async function fetchSchedule(url, team, selectIndex = -1) {
+            const statusEl = settingsStatusEl;
+            const btn = updateScheduleBtn;
             
             try {
-                statusEl.textContent = '⏳ Fetching roster...';
-                statusEl.className = 'url-status';
+                statusEl.textContent = '⏳ Fetching schedule...';
+                statusEl.className = 'settings-status';
                 btn.classList.add('loading');
                 btn.textContent = '⏳ Loading...';
+                refreshScheduleBtn.classList.add('loading');
+                refreshScheduleBtn.textContent = '⏳';
 
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 const data = await response.json();
                 
-                if (data.data && data.data.players) {
-                    const players = data.data.players;
-                    
-                    // Build new player data
-                    const newPlayers = [];
-                    const newStatusMap = {};
-                    const newTypeMap = {};
-                    
-                    players.forEach(p => {
-                        const firstName = p.name_first;
-                        newPlayers.push(firstName);
-                        newStatusMap[firstName] = p.attendance_status !== undefined ? p.attendance_status : null;
-                        
-                        // Check if goalie
-                        const isGoalie = p.player_type && p.player_type.is_goalie === 1;
-                        newTypeMap[firstName] = isGoalie ? 'goalie' : 'skater';
-                    });
-
-                    // PRESERVE existing lines - only remove players that no longer exist
-                    const playerSet = new Set(newPlayers);
-                    forwards = forwards.map(p => {
-                        if (p && !playerSet.has(p)) {
-                            return null; // Player no longer in roster
-                        }
-                        return p;
-                    });
-                    defense = defense.map(p => {
-                        if (p && !playerSet.has(p)) {
-                            return null;
-                        }
-                        return p;
-                    });
-
-                    // Update state
-                    allPlayers = newPlayers;
-                    playerStatusMap = newStatusMap;
-                    playerTypeMap = newTypeMap;
-                    currentUrl = url;
-
-                    // Save URL for next session
-                    saveUrl(url);
-                    saveLines(); // Save the updated lines
-
-                    statusEl.textContent = `✅ Loaded ${allPlayers.length} players (${Object.values(newTypeMap).filter(t => t === 'goalie').length} goalies)`;
-                    statusEl.className = 'url-status success';
-                    
-                    isLoading = false;
-                    renderAll();
-                    showToast(`✅ Roster updated! ${allPlayers.length} players loaded. Lines preserved.`);
-                } else {
-                    throw new Error('Invalid data structure: missing players array');
+                if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+                    throw new Error('No games found in schedule');
                 }
+
+                // Extract all games for the selected team (past and future)
+                wolfpacGames = [];
+                for (const game of data.data) {
+                    const isTeamHome = game.homeTeam && game.homeTeam.name === team;
+                    const isTeamAway = game.visitingTeam && game.visitingTeam.name === team;
+                    
+                    if (isTeamHome || isTeamAway) {
+                        wolfpacGames.push(game);
+                    }
+                }
+
+                if (wolfpacGames.length === 0) {
+                    throw new Error(`No games found for "${team}" in schedule`);
+                }
+
+                // Save the schedule URL and team name
+                currentScheduleUrl = url;
+                teamName = team;
+                saveUrl(url);
+                saveTeamName(team);
+
+                // Determine which game to show - ALWAYS default to next upcoming game
+                let targetIndex = selectIndex;
+                if (targetIndex < 0 || targetIndex >= wolfpacGames.length) {
+                    // Find the next upcoming game (first one in the future)
+                    const now = new Date();
+                    targetIndex = -1;
+                    for (let i = 0; i < wolfpacGames.length; i++) {
+                        const gameDate = new Date(wolfpacGames[i].starts_at);
+                        if (gameDate > now) {
+                            targetIndex = i;
+                            break;
+                        }
+                    }
+                    // If no upcoming games, default to the last game in the list
+                    if (targetIndex === -1) {
+                        targetIndex = wolfpacGames.length - 1;
+                    }
+                }
+
+                // Display the game and load roster
+                const game = wolfpacGames[targetIndex];
+                currentGameIndex = targetIndex;
+                nextGameData = game;
+                
+                displayGameInfo(game);
+                updateNavButtons();
+                statusEl.textContent = `✅ Found ${wolfpacGames.length} games for "${team}". Showing game ${targetIndex + 1}/${wolfpacGames.length}`;
+                statusEl.className = 'settings-status success';
+
+                // Fetch the roster for this game
+                await fetchGameRoster(game.id);
+
             } catch (error) {
-                console.error('Error fetching players:', error);
+                console.error('Error fetching schedule:', error);
                 statusEl.textContent = `❌ Error: ${error.message}`;
-                statusEl.className = 'url-status error';
-                playerListEl.innerHTML = `<div class="empty-pool-msg">⚠️ Failed to load roster. Please check the URL and try again.</div>`;
-                showToast('❌ Failed to load roster');
+                statusEl.className = 'settings-status error';
+                gameInfoEl.innerHTML = `<span class="no-game">⚠️ ${error.message}</span>`;
+                showToast('❌ Failed to load schedule');
             } finally {
                 btn.classList.remove('loading');
                 btn.textContent = '🔄 Update';
+                refreshScheduleBtn.classList.remove('loading');
+                refreshScheduleBtn.textContent = '🔄 Refresh';
+            }
+        }
+
+        // ----- FETCH GAME ROSTER -----
+        async function fetchGameRoster(gameId) {
+            const url = GAME_API_BASE + gameId;
+            const statusEl = settingsStatusEl;
+            
+            try {
+                statusEl.textContent = '⏳ Fetching roster...';
+                statusEl.className = 'settings-status';
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const data = await response.json();
+                
+                // Find the team in the playerRosters array
+                const playerRosters = data.data?.playerRosters || [];
+                let teamRoster = null;
+                
+                for (const roster of playerRosters) {
+                    if (roster.team && roster.team.name === teamName) {
+                        teamRoster = roster;
+                        break;
+                    }
+                }
+                
+                if (!teamRoster) {
+                    throw new Error(`"${teamName}" not found in this game`);
+                }
+                
+                const players = teamRoster.players || [];
+                if (players.length === 0) {
+                    throw new Error(`No players found for "${teamName}"`);
+                }
+                
+                // Build player data
+                const newPlayers = [];
+                const newStatusMap = {};
+                const newTypeMap = {};
+                
+                players.forEach(p => {
+                    const firstName = p.name_first;
+                    if (firstName) {
+                        newPlayers.push(firstName);
+                        newStatusMap[firstName] = p.attendance_status !== undefined && p.attendance_status !== null ? p.attendance_status : null;
+                        
+                        const isGoalie = p.player_type && p.player_type.is_goalie === 1;
+                        newTypeMap[firstName] = isGoalie ? 'goalie' : 'skater';
+                    }
+                });
+
+                // PRESERVE existing lines - only remove players that no longer exist
+                const playerSet = new Set(newPlayers);
+                forwards = forwards.map(p => {
+                    if (p && !playerSet.has(p)) {
+                        return null;
+                    }
+                    return p;
+                });
+                defense = defense.map(p => {
+                    if (p && !playerSet.has(p)) {
+                        return null;
+                    }
+                    return p;
+                });
+
+                // Update state
+                allPlayers = newPlayers;
+                playerStatusMap = newStatusMap;
+                playerTypeMap = newTypeMap;
+
+                saveLines();
+
+                const goalieCount = Object.values(newTypeMap).filter(t => t === 'goalie').length;
+                statusEl.textContent = `✅ "${teamName}": ${allPlayers.length} players (${goalieCount} goalies)`;
+                statusEl.className = 'settings-status success';
+                
+                isLoading = false;
+                renderAll();
+                showToast(`✅ Roster loaded! ${allPlayers.length} players. Lines preserved.`);
+            } catch (error) {
+                console.error('Error fetching roster:', error);
+                statusEl.textContent = `❌ Roster error: ${error.message}`;
+                statusEl.className = 'settings-status error';
+                playerListEl.innerHTML = `<div class="empty-pool-msg">⚠️ Failed to load roster. ${error.message}</div>`;
+                showToast('❌ Failed to load roster');
             }
         }
 
@@ -927,11 +1238,9 @@
                 const isGoalieA = playerTypeMap[a] === 'goalie';
                 const isGoalieB = playerTypeMap[b] === 'goalie';
                 
-                // Goalies always go to the bottom
                 if (isGoalieA && !isGoalieB) return 1;
                 if (!isGoalieA && isGoalieB) return -1;
                 
-                // For non-goalies, sort by attendance status
                 const statusA = playerStatusMap[a];
                 const statusB = playerStatusMap[b];
                 
@@ -950,11 +1259,10 @@
         // ----- AUTO GENERATE -----
         function autoGenerate() {
             if (allPlayers.length === 0) {
-                showToast('⚠️ No players loaded. Please update the roster first.');
+                showToast('⚠️ No players loaded. Please update the schedule first.');
                 return;
             }
             
-            // Get only skaters (non-goalies) for lines
             const skaters = allPlayers.filter(name => playerTypeMap[name] !== 'goalie');
             
             if (skaters.length === 0) {
@@ -1093,7 +1401,7 @@
             }
 
             if (allPlayers.length === 0) {
-                playerListEl.innerHTML = `<div class="empty-pool-msg">No players loaded. Click "Update" to fetch roster.</div>`;
+                playerListEl.innerHTML = `<div class="empty-pool-msg">No players loaded. Click "Update" to fetch schedule and roster.</div>`;
                 poolCountEl.textContent = '0';
                 return;
             }
@@ -1418,7 +1726,7 @@
 
         function resetRoster() {
             if (allPlayers.length === 0) {
-                showToast('⚠️ No players loaded. Please update the roster first.');
+                showToast('⚠️ No players loaded. Please update the schedule first.');
                 return;
             }
             forwards = Array(9).fill(null);
@@ -1436,11 +1744,45 @@
             showToast('🧹 All lines cleared');
         }
 
+        // ----- NAVIGATION -----
+        function goToPrevGame() {
+            if (currentGameIndex > 0) {
+                loadGameByIndex(currentGameIndex - 1);
+            }
+        }
+
+        function goToNextGame() {
+            if (currentGameIndex < wolfpacGames.length - 1) {
+                loadGameByIndex(currentGameIndex + 1);
+            }
+        }
+
+        // ----- REFRESH SCHEDULE -----
+        function refreshSchedule() {
+            const url = scheduleUrlInput.value.trim();
+            const team = teamNameInput.value.trim();
+            
+            if (!url) {
+                settingsStatusEl.textContent = '⚠️ Please enter a schedule URL';
+                settingsStatusEl.className = 'settings-status error';
+                return;
+            }
+            if (!team) {
+                settingsStatusEl.textContent = '⚠️ Please enter a team name';
+                settingsStatusEl.className = 'settings-status error';
+                return;
+            }
+            // Reset index to auto-select next upcoming game
+            fetchSchedule(url, team, -1);
+        }
+
         // ----- INIT -----
         async function init() {
-            // Load saved URL or use default
+            // Load saved values
             const savedUrl = loadUrl();
-            rosterUrlInput.value = savedUrl;
+            const savedTeam = loadTeamName();
+            scheduleUrlInput.value = savedUrl;
+            teamNameInput.value = savedTeam;
             
             // Set up event listeners
             resetBtn.addEventListener('click', resetRoster);
@@ -1448,26 +1790,25 @@
             copyBtn.addEventListener('click', copyLines);
             autoBtn.addEventListener('click', autoGenerate);
             
-            updateRosterBtn.addEventListener('click', () => {
-                const url = rosterUrlInput.value.trim();
-                if (!url) {
-                    urlStatusEl.textContent = '⚠️ Please enter a URL';
-                    urlStatusEl.className = 'url-status error';
-                    return;
-                }
-                // Don't clear lines - let fetchPlayers handle it
-                fetchPlayers(url);
-            });
+            updateScheduleBtn.addEventListener('click', refreshSchedule);
+            refreshScheduleBtn.addEventListener('click', refreshSchedule);
+            prevGameBtn.addEventListener('click', goToPrevGame);
+            nextGameBtn.addEventListener('click', goToNextGame);
 
-            // Enter key on input triggers update
-            rosterUrlInput.addEventListener('keydown', (e) => {
+            // Enter key on inputs triggers update
+            scheduleUrlInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    updateRosterBtn.click();
+                    refreshSchedule();
+                }
+            });
+            teamNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    refreshSchedule();
                 }
             });
 
-            // Load initial roster
-            await fetchPlayers(savedUrl);
+            // Load initial schedule
+            await fetchSchedule(savedUrl, savedTeam, -1);
         }
 
         init();
