@@ -550,6 +550,108 @@
             pointer-events: none;
         }
 
+        /* -------- IMPORT SECTION -------- */
+        .import-section {
+            background: #14222e;
+            border-radius: 1.8rem;
+            padding: 0.6rem 0.8rem 0.7rem;
+            box-shadow: inset 0 0 0 1px #2d4456;
+            margin-top: 0.5rem;
+        }
+        .import-section .import-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .import-section label {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #b6d0e0;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            min-width: 50px;
+        }
+        .import-section textarea {
+            flex: 1;
+            min-width: 150px;
+            background: #1a2c3a;
+            border: 1px solid #3a5a6e;
+            border-radius: 1rem;
+            padding: 0.4rem 0.8rem;
+            color: #f0f4fa;
+            font-size: 0.7rem;
+            font-family: monospace;
+            outline: none;
+            transition: border-color 0.15s;
+            resize: vertical;
+            min-height: 60px;
+            max-height: 150px;
+        }
+        .import-section textarea:focus {
+            border-color: #6a9aaa;
+        }
+        .import-section textarea::placeholder {
+            color: #5a7a8a;
+        }
+        .import-section .import-btn-group {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .import-section .import-btn {
+            background: #4a6a4a;
+            border: none;
+            color: #d4e3ef;
+            padding: 0.35rem 1rem;
+            border-radius: 2.5rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid #5a8a5a;
+            touch-action: manipulation;
+            white-space: nowrap;
+        }
+        .import-section .import-btn:hover {
+            background: #5a8a5a;
+            border-color: #6a9a6a;
+        }
+        .import-section .import-btn:active {
+            transform: scale(0.96);
+        }
+        .import-section .import-btn.paste-btn {
+            background: #3a5a7a;
+            border-color: #4a7a9a;
+        }
+        .import-section .import-btn.paste-btn:hover {
+            background: #4a7a9a;
+            border-color: #5a9aaa;
+        }
+        .import-section .import-btn.clear-btn {
+            background: #5a3a3a;
+            border-color: #7a4a4a;
+        }
+        .import-section .import-btn.clear-btn:hover {
+            background: #7a4a4a;
+            border-color: #9a5a5a;
+        }
+        .import-status {
+            font-size: 0.6rem;
+            color: #7a96aa;
+            padding: 0.1rem 0.2rem;
+            width: 100%;
+            margin-top: 0.2rem;
+        }
+        .import-status.success {
+            color: #3daf77;
+        }
+        .import-status.error {
+            color: #af5a5a;
+        }
+
         /* -------- BUTTONS -------- */
         .reset-btn {
             background: #2b4052;
@@ -687,6 +789,11 @@
             .next-game-banner .nav-section { align-self: center; }
             .next-game-banner .refresh-btn { align-self: flex-end; }
             .next-game-banner .nav-btn { width: 32px; height: 32px; font-size: 1rem; }
+            .import-section { padding: 0.4rem 0.5rem; }
+            .import-section .import-row { flex-direction: column; align-items: stretch; }
+            .import-section .import-btn-group { justify-content: stretch; }
+            .import-section .import-btn { flex: 1; text-align: center; padding: 0.3rem 0.5rem; font-size: 0.7rem; }
+            .import-section textarea { min-height: 50px; max-height: 120px; }
         }
         @media (max-width: 400px) {
             .grid-forwards { grid-template-columns: repeat(3, 1fr); }
@@ -731,6 +838,12 @@
                 flex: 0 1 auto;
             }
             .settings-section .settings-row {
+                flex-wrap: nowrap;
+            }
+            .import-section .import-row {
+                flex-wrap: nowrap;
+            }
+            .import-section .import-btn-group {
                 flex-wrap: nowrap;
             }
         }
@@ -842,10 +955,24 @@
         </div>
         <div class="settings-row">
             <label for="scheduleUrl">📡 Schedule URL:</label>
-            <input type="text" id="scheduleUrl" placeholder="Paste schedule API URL here..." />
+            <input type="text" id="scheduleUrl" placeholder="Paste schedule API URL here..." value="https://canlan2-api.sportninja.net/v1/schedules/btm5NkDxsGpcoJaz/games?order=asc&exclude_cancelled_games=1&team_id=GAFNqGN5d9OKsYdO&include_officials=1&starts_after=2026-08-31T10:00:00.000Z&starts_before=2027-01-01T12:00:00.000Z&page=1" />
             <button id="updateScheduleBtn" class="update-btn">🔄 Update</button>
         </div>
         <div id="settingsStatus" class="settings-status">Ready</div>
+    </div>
+
+    <!-- IMPORT SECTION - VERY BOTTOM -->
+    <div class="import-section">
+        <div class="import-row">
+            <label for="importText">📥 Paste Lines:</label>
+            <textarea id="importText" placeholder="Paste copied lines here (e.g., John - Mike - Dave) then click Import..."></textarea>
+            <div class="import-btn-group">
+                <button id="pasteBtn" class="import-btn paste-btn">📋 Paste</button>
+                <button id="clearImportBtn" class="import-btn clear-btn">✖ Clear</button>
+                <button id="importBtn" class="import-btn">📥 Import</button>
+            </div>
+        </div>
+        <div id="importStatus" class="import-status">Paste lines and click Import to apply them</div>
     </div>
 </div>
 
@@ -860,7 +987,7 @@
         const STORAGE_KEY_URL = 'wolfpac_schedule_url';
         const STORAGE_KEY_TEAM = 'wolfpac_team_name';
 
-        // ----- DEFAULT VALUES (UPDATED URL) -----
+        // ----- DEFAULT VALUES -----
         const DEFAULT_SCHEDULE_URL = 'https://canlan2-api.sportninja.net/v1/schedules/btm5NkDxsGpcoJaz/games?order=asc&exclude_cancelled_games=1&team_id=GAFNqGN5d9OKsYdO&include_officials=1&starts_after=2026-08-31T10%3A00%3A00.000Z&starts_before=2027-01-01T12%3A00%3A00.000Z&page=1';
         const DEFAULT_TEAM_NAME = 'Wolfpac';
         const GAME_API_BASE = 'https://canlan2-api.sportninja.net/v1/games/';
@@ -875,9 +1002,10 @@
         let saveTimeout = null;
         let currentScheduleUrl = '';
         let teamName = DEFAULT_TEAM_NAME;
-        let wolfpacGames = [];
+        let teamGames = [];
         let currentGameIndex = -1;
         let nextGameData = null;
+        let hasLoadedSavedLines = false;
 
         // DOM refs
         const playerListEl = document.getElementById('playerList');
@@ -899,6 +1027,11 @@
         const gameCounterEl = document.getElementById('gameCounter');
         const settingsStatusEl = document.getElementById('settingsStatus');
         const gameInfoEl = document.getElementById('gameInfo');
+        const importText = document.getElementById('importText');
+        const importBtn = document.getElementById('importBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const clearImportBtn = document.getElementById('clearImportBtn');
+        const importStatus = document.getElementById('importStatus');
 
         // ----- DRAG STATE -----
         let dragState = {
@@ -930,22 +1063,34 @@
                 const savedForwards = localStorage.getItem(STORAGE_KEY_FORWARDS);
                 const savedDefense = localStorage.getItem(STORAGE_KEY_DEFENSE);
                 
+                let loaded = false;
                 if (savedForwards) {
                     const parsed = JSON.parse(savedForwards);
                     if (Array.isArray(parsed) && parsed.length === 9) {
                         forwards = parsed;
+                        loaded = true;
                     }
                 }
                 if (savedDefense) {
                     const parsed = JSON.parse(savedDefense);
                     if (Array.isArray(parsed) && parsed.length === 6) {
                         defense = parsed;
+                        loaded = true;
                     }
                 }
-                return true;
+                return loaded;
             } catch (e) {
                 console.warn('Could not load from localStorage:', e);
                 return false;
+            }
+        }
+
+        function clearSavedLines() {
+            try {
+                localStorage.removeItem(STORAGE_KEY_FORWARDS);
+                localStorage.removeItem(STORAGE_KEY_DEFENSE);
+            } catch (e) {
+                console.warn('Could not clear saved lines:', e);
             }
         }
 
@@ -997,31 +1142,29 @@
 
         // ----- UPDATE NAV BUTTONS -----
         function updateNavButtons() {
-            if (wolfpacGames.length === 0) {
+            if (teamGames.length === 0) {
                 prevGameBtn.disabled = true;
                 nextGameBtn.disabled = true;
                 gameCounterEl.textContent = '0/0';
                 return;
             }
             prevGameBtn.disabled = currentGameIndex <= 0;
-            nextGameBtn.disabled = currentGameIndex >= wolfpacGames.length - 1;
-            gameCounterEl.textContent = `${currentGameIndex + 1}/${wolfpacGames.length}`;
+            nextGameBtn.disabled = currentGameIndex >= teamGames.length - 1;
+            gameCounterEl.textContent = `${currentGameIndex + 1}/${teamGames.length}`;
         }
 
         // ----- LOAD GAME BY INDEX -----
         async function loadGameByIndex(index) {
-            if (index < 0 || index >= wolfpacGames.length) return;
+            if (index < 0 || index >= teamGames.length) return;
             
-            const game = wolfpacGames[index];
+            const game = teamGames[index];
             currentGameIndex = index;
             nextGameData = game;
             
-            // Update banner
             displayGameInfo(game);
             updateNavButtons();
             
-            // Fetch roster for this game
-            await fetchGameRoster(game.id);
+            await fetchGameRoster(game.id, true);
         }
 
         // ----- DISPLAY GAME INFO -----
@@ -1066,58 +1209,57 @@
                     throw new Error('No games found in schedule');
                 }
 
-                // Extract all games for the selected team (past and future)
-                wolfpacGames = [];
+                teamGames = [];
                 for (const game of data.data) {
                     const isTeamHome = game.homeTeam && game.homeTeam.name === team;
                     const isTeamAway = game.visitingTeam && game.visitingTeam.name === team;
                     
                     if (isTeamHome || isTeamAway) {
-                        wolfpacGames.push(game);
+                        teamGames.push(game);
                     }
                 }
 
-                if (wolfpacGames.length === 0) {
+                if (teamGames.length === 0) {
                     throw new Error(`No games found for "${team}" in schedule`);
                 }
 
-                // Save the schedule URL and team name
                 currentScheduleUrl = url;
                 teamName = team;
                 saveUrl(url);
                 saveTeamName(team);
 
-                // Determine which game to show - ALWAYS default to next upcoming game
                 let targetIndex = selectIndex;
-                if (targetIndex < 0 || targetIndex >= wolfpacGames.length) {
-                    // Find the next upcoming game (first one in the future)
+                if (targetIndex < 0 || targetIndex >= teamGames.length) {
                     const now = new Date();
                     targetIndex = -1;
-                    for (let i = 0; i < wolfpacGames.length; i++) {
-                        const gameDate = new Date(wolfpacGames[i].starts_at);
+                    for (let i = 0; i < teamGames.length; i++) {
+                        const gameDate = new Date(teamGames[i].starts_at);
                         if (gameDate > now) {
                             targetIndex = i;
                             break;
                         }
                     }
-                    // If no upcoming games, default to the last game in the list
                     if (targetIndex === -1) {
-                        targetIndex = wolfpacGames.length - 1;
+                        targetIndex = teamGames.length - 1;
                     }
                 }
 
-                // Display the game and load roster
-                const game = wolfpacGames[targetIndex];
+                const game = teamGames[targetIndex];
                 currentGameIndex = targetIndex;
                 nextGameData = game;
                 
                 displayGameInfo(game);
                 updateNavButtons();
-                statusEl.textContent = `✅ Found ${wolfpacGames.length} games for "${team}". Showing game ${targetIndex + 1}/${wolfpacGames.length}`;
+                statusEl.textContent = `✅ Found ${teamGames.length} games for "${team}". Showing game ${targetIndex + 1}/${teamGames.length}`;
                 statusEl.className = 'settings-status success';
 
-                // Fetch the roster for this game
-                await fetchGameRoster(game.id);
+                const hasSavedLines = loadLines();
+                if (hasSavedLines) {
+                    hasLoadedSavedLines = true;
+                    statusEl.textContent += ' (lines restored from save)';
+                }
+
+                await fetchGameRoster(game.id, true);
 
             } catch (error) {
                 console.error('Error fetching schedule:', error);
@@ -1134,7 +1276,7 @@
         }
 
         // ----- FETCH GAME ROSTER -----
-        async function fetchGameRoster(gameId) {
+        async function fetchGameRoster(gameId, preserveLines = false) {
             const url = GAME_API_BASE + gameId;
             const statusEl = settingsStatusEl;
             
@@ -1146,7 +1288,6 @@
                 if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 const data = await response.json();
                 
-                // Find the team in the playerRosters array
                 const playerRosters = data.data?.playerRosters || [];
                 let teamRoster = null;
                 
@@ -1166,7 +1307,6 @@
                     throw new Error(`No players found for "${teamName}"`);
                 }
                 
-                // Build player data
                 const newPlayers = [];
                 const newStatusMap = {};
                 const newTypeMap = {};
@@ -1182,22 +1322,25 @@
                     }
                 });
 
-                // PRESERVE existing lines - only remove players that no longer exist
                 const playerSet = new Set(newPlayers);
-                forwards = forwards.map(p => {
-                    if (p && !playerSet.has(p)) {
-                        return null;
-                    }
-                    return p;
-                });
-                defense = defense.map(p => {
-                    if (p && !playerSet.has(p)) {
-                        return null;
-                    }
-                    return p;
-                });
+                if (preserveLines) {
+                    forwards = forwards.map(p => {
+                        if (p && !playerSet.has(p)) {
+                            return null;
+                        }
+                        return p;
+                    });
+                    defense = defense.map(p => {
+                        if (p && !playerSet.has(p)) {
+                            return null;
+                        }
+                        return p;
+                    });
+                } else {
+                    forwards = Array(9).fill(null);
+                    defense = Array(6).fill(null);
+                }
 
-                // Update state
                 allPlayers = newPlayers;
                 playerStatusMap = newStatusMap;
                 playerTypeMap = newTypeMap;
@@ -1217,6 +1360,196 @@
                 statusEl.className = 'settings-status error';
                 playerListEl.innerHTML = `<div class="empty-pool-msg">⚠️ Failed to load roster. ${error.message}</div>`;
                 showToast('❌ Failed to load roster');
+            }
+        }
+
+        // ----- CLIPBOARD FUNCTIONS -----
+        async function pasteFromClipboard() {
+            const statusEl = importStatus;
+            
+            try {
+                // Check if the Clipboard API is available
+                if (!navigator.clipboard || !navigator.clipboard.readText) {
+                    statusEl.textContent = '📱 Please tap the textarea and paste manually (long press → Paste)';
+                    statusEl.className = 'import-status error';
+                    // Focus the textarea so the user can paste easily
+                    importText.focus();
+                    return;
+                }
+
+                const text = await navigator.clipboard.readText();
+                if (text && text.trim().length > 0) {
+                    importText.value = text;
+                    statusEl.textContent = '📋 Pasted from clipboard! Click Import to apply.';
+                    statusEl.className = 'import-status success';
+                    showToast('📋 Text pasted from clipboard!');
+                } else {
+                    statusEl.textContent = '⚠️ Clipboard is empty.';
+                    statusEl.className = 'import-status error';
+                }
+            } catch (err) {
+                console.error('Clipboard error:', err);
+                
+                // Handle different error types with helpful messages
+                if (err.name === 'NotAllowedError' || err.message.includes('permission')) {
+                    statusEl.textContent = '🔒 Permission denied. Please tap the textarea and paste manually (long press → Paste).';
+                    statusEl.className = 'import-status error';
+                    importText.focus();
+                } else if (err.name === 'NotFoundError' || err.message.includes('Clipboard')) {
+                    statusEl.textContent = '📱 Please tap the textarea and paste manually (long press → Paste)';
+                    statusEl.className = 'import-status error';
+                    importText.focus();
+                } else {
+                    statusEl.textContent = '❌ Failed to read clipboard. Please paste manually.';
+                    statusEl.className = 'import-status error';
+                    importText.focus();
+                }
+            }
+        }
+
+        function clearImportText() {
+            importText.value = '';
+            importStatus.textContent = '🧹 Cleared! Paste new text or click Import.';
+            importStatus.className = 'import-status';
+        }
+
+        // ----- IMPORT LINES FROM TEXT -----
+        function importLinesFromText() {
+            const text = importText.value.trim();
+            if (!text) {
+                importStatus.textContent = '⚠️ Please paste some text first';
+                importStatus.className = 'import-status error';
+                return;
+            }
+
+            try {
+                const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+                
+                let startIndex = 0;
+                if (lines.length > 0 && /^lines/i.test(lines[0].trim())) {
+                    startIndex = 1;
+                }
+
+                const parsedLines = [];
+                for (let i = startIndex; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    const players = line.split(/[-,\t]+/).map(p => p.trim()).filter(p => p.length > 0);
+                    if (players.length > 0) {
+                        parsedLines.push(players);
+                    }
+                }
+
+                if (parsedLines.length === 0) {
+                    importStatus.textContent = '⚠️ No player names found in the text';
+                    importStatus.className = 'import-status error';
+                    return;
+                }
+
+                const allParsedNames = parsedLines.flat();
+                const validNames = allParsedNames.filter(name => allPlayers.includes(name));
+                const invalidNames = allParsedNames.filter(name => !allPlayers.includes(name));
+
+                if (validNames.length === 0) {
+                    importStatus.textContent = `⚠️ No matching players found in roster. Make sure names match exactly.`;
+                    importStatus.className = 'import-status error';
+                    return;
+                }
+
+                forwards = Array(9).fill(null);
+                defense = Array(6).fill(null);
+
+                let playerIndex = 0;
+
+                for (let row = 0; row < 3; row++) {
+                    if (row < parsedLines.length) {
+                        const playersInRow = parsedLines[row];
+                        for (let col = 0; col < 3; col++) {
+                            if (col < playersInRow.length) {
+                                const name = playersInRow[col];
+                                if (allPlayers.includes(name)) {
+                                    forwards[row * 3 + col] = name;
+                                    playerIndex++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (let row = 0; row < 3; row++) {
+                    const defenseRow = 3 + row;
+                    if (defenseRow < parsedLines.length) {
+                        const playersInRow = parsedLines[defenseRow];
+                        for (let col = 0; col < 2; col++) {
+                            if (col < playersInRow.length) {
+                                const name = playersInRow[col];
+                                if (allPlayers.includes(name)) {
+                                    defense[row * 2 + col] = name;
+                                    playerIndex++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (parsedLines.length > 6) {
+                    let remainingPlayers = [];
+                    for (let i = 6; i < parsedLines.length; i++) {
+                        remainingPlayers = remainingPlayers.concat(parsedLines[i]);
+                    }
+                    
+                    let remainingIndex = 0;
+                    for (let i = 0; i < forwards.length; i++) {
+                        if (!forwards[i] && remainingIndex < remainingPlayers.length) {
+                            const name = remainingPlayers[remainingIndex];
+                            if (allPlayers.includes(name)) {
+                                forwards[i] = name;
+                            }
+                            remainingIndex++;
+                        }
+                    }
+                    
+                    for (let i = 0; i < defense.length; i++) {
+                        if (!defense[i] && remainingIndex < remainingPlayers.length) {
+                            const name = remainingPlayers[remainingIndex];
+                            if (allPlayers.includes(name)) {
+                                defense[i] = name;
+                            }
+                            remainingIndex++;
+                        }
+                    }
+                }
+
+                const usedPlayers = new Set();
+                forwards = forwards.map(p => {
+                    if (p && usedPlayers.has(p)) {
+                        return null;
+                    }
+                    if (p) usedPlayers.add(p);
+                    return p;
+                });
+                defense = defense.map(p => {
+                    if (p && usedPlayers.has(p)) {
+                        return null;
+                    }
+                    if (p) usedPlayers.add(p);
+                    return p;
+                });
+
+                renderAll();
+                saveLines();
+
+                const totalPlaced = usedPlayers.size;
+                const invalidMsg = invalidNames.length > 0 ? ` (${invalidNames.length} names skipped - not in roster)` : '';
+                importStatus.textContent = `✅ Imported ${totalPlaced} players from ${parsedLines.length} lines${invalidMsg}`;
+                importStatus.className = 'import-status success';
+                showToast(`✅ Lines imported! ${totalPlaced} players placed.`);
+
+                importText.value = '';
+
+            } catch (error) {
+                console.error('Import error:', error);
+                importStatus.textContent = `❌ Error parsing text: ${error.message}`;
+                importStatus.className = 'import-status error';
             }
         }
 
@@ -1319,7 +1652,7 @@
                     }
                 }
                 if (line.length > 0) {
-                    forwardLines.push(line.join(' '));
+                    forwardLines.push(line.join(' - '));
                 }
             }
 
@@ -1334,11 +1667,11 @@
                     }
                 }
                 if (pair.length > 0) {
-                    defenseLines.push(pair.join(' '));
+                    defenseLines.push(pair.join(' - '));
                 }
             }
 
-            let output = 'Lines for tonight:\n';
+            let output = 'Lines:\n';
             
             if (forwardLines.length > 0) {
                 output += forwardLines.join('\n');
@@ -1356,6 +1689,9 @@
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(output).then(() => {
                     showToast('✅ Copied to clipboard!');
+                    importText.value = output;
+                    importStatus.textContent = '📋 Copied! You can edit and click Import to apply.';
+                    importStatus.className = 'import-status success';
                 }).catch(() => {
                     fallbackCopy(output);
                 });
@@ -1375,6 +1711,9 @@
             try {
                 document.execCommand('copy');
                 showToast('✅ Copied to clipboard!');
+                importText.value = text;
+                importStatus.textContent = '📋 Copied! You can edit and click Import to apply.';
+                importStatus.className = 'import-status success';
             } catch (err) {
                 showToast('❌ Failed to copy. Please copy manually.');
                 console.error('Copy failed:', err);
@@ -1752,7 +2091,7 @@
         }
 
         function goToNextGame() {
-            if (currentGameIndex < wolfpacGames.length - 1) {
+            if (currentGameIndex < teamGames.length - 1) {
                 loadGameByIndex(currentGameIndex + 1);
             }
         }
@@ -1772,19 +2111,17 @@
                 settingsStatusEl.className = 'settings-status error';
                 return;
             }
-            // Reset index to auto-select next upcoming game
+            hasLoadedSavedLines = false;
             fetchSchedule(url, team, -1);
         }
 
         // ----- INIT -----
         async function init() {
-            // Load saved values
             const savedUrl = loadUrl();
             const savedTeam = loadTeamName();
             scheduleUrlInput.value = savedUrl;
             teamNameInput.value = savedTeam;
             
-            // Set up event listeners
             resetBtn.addEventListener('click', resetRoster);
             clearAllBtn.addEventListener('click', clearAllLines);
             copyBtn.addEventListener('click', copyLines);
@@ -1795,7 +2132,19 @@
             prevGameBtn.addEventListener('click', goToPrevGame);
             nextGameBtn.addEventListener('click', goToNextGame);
 
-            // Enter key on inputs triggers update
+            // Import section buttons
+            importBtn.addEventListener('click', importLinesFromText);
+            pasteBtn.addEventListener('click', pasteFromClipboard);
+            clearImportBtn.addEventListener('click', clearImportText);
+            
+            // Ctrl+Enter or Cmd+Enter in textarea triggers import
+            importText.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    importLinesFromText();
+                }
+            });
+
             scheduleUrlInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     refreshSchedule();
@@ -1807,7 +2156,12 @@
                 }
             });
 
-            // Load initial schedule
+            const hasSavedLines = loadLines();
+            if (hasSavedLines) {
+                hasLoadedSavedLines = true;
+                console.log('Restored lines from localStorage');
+            }
+
             await fetchSchedule(savedUrl, savedTeam, -1);
         }
 
