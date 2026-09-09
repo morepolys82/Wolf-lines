@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes" />
+    <title>Burnaby Dragoons · Line Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0e1a24;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0.8rem;
+        }
+        .app {
+            max-width: 1100px;
+            width: 100%;
+            background: #0f1a26;
+            border-radius: 2rem;
+            padding: 1.2rem 0.8rem 1.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+            color: #f0f4fa;
+            position: relative;
+        }
+        h1 {
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            font-size: 1.6rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0 0.25rem;
+        }
+        h1 small {
+            font-size: 0.8rem;
+            font-weight: 300;
+            opacity: 0.65;
+            margin-left: 0.2rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 1rem;
+            color: #7a96aa;
+            font-style: italic;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+        .main-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        /* -------- NEXT GAME BANNER -------- */
+        .next-game-banner {
+            background: #1a3a4a;
+            border-radius: 1.8rem;
+            padding: 0.6rem 0.8rem;
+            box-shadow: inset 0 0 0 1px #2d5a6e;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .next-game-banner .nav-section {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .next-game-banner .nav-btn {
+            background: #1a2a3a;
+            border: 1px solid #3a5a6a;
+            color: #d4e3ef;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+            touch-action: manipulation;
+            flex-shrink: 0;
+        }
+        .next-game-banner .nav-btn:hover {
+            background: #2a4a5a;
+            border-color: #5a7a8a;
+        }
+        .next-game-banner .nav-btn:active {
+            transform: scale(0.92);
+        }
+        .next-game-banner .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .next-game-banner .game-info {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.3rem 1rem;
+            font-size: 0.85rem;
+            flex: 1;
+            min-width: 0;
+        }
+        .next-game-banner .game-info .label {
+            color: #8aacbe;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .next-game-banner .game-info .teams {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+        .next-game-banner .game-info .teams .vs {
+            color: #6a8a9a;
+            font-weight: 300;
+            font-size: 0.7rem;
+        }
+        .next-game-banner .game-info .datetime {
+            color: #b6d0e0;
+            font-size: 0.7rem;
+        }
+        .next-game-banner .game-info .rink {
+            color: #8aacbe;
+            font-size: 0.65rem;
+            background: #1a2a3a;
+            padding: 0.1rem 0.6rem;
+            border-radius: 1rem;
+        }
+        .next-game-banner .game-counter {
+            color: #6a8a9a;
+            font-size: 0.6rem;
+            white-space: nowrap;
+        }
+        .next-game-banner .refresh-btn {
+            background: #2a4a5a;
+            border: none;
+            color: #d4e3ef;
+            padding: 0.25rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid #4a6a7a;
+            touch-action: manipulation;
+            white-space: nowrap;
+        }
+        .next-game-banner .refresh-btn:hover {
+            background: #3a5a6a;
+            border-color: #6a8a9a;
+        }
+        .next-game-banner .refresh-btn.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .next-game-banner .no-game {
+            color: #8aacbe;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        /* -------- URL INPUT SECTION - VERTICAL LAYOUT (BOTTOM) -------- */
+        .settings-section {
+            background: #14222e;
+            border-radius: 1.8rem;
+            padding: 0.8rem 0.8rem 0.6rem;
+            box-shadow: inset 0 0 0 1px #2d4456;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .settings-section .settings-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .settings-section label {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #b6d0e0;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            min-width: 70px;
+        }
+        .settings-section input {
+            flex: 1;
+            min-width: 120px;
+            background: #1a2c3a;
+            border: 1px solid #3a5a6e;
+            border-radius: 2rem;
+            padding: 0.4rem 0.8rem;
+            color: #f0f4fa;
+            font-size: 0.75rem;
+            font-family: monospace;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .settings-section input:focus {
+            border-color: #6a9aaa;
+        }
+        .settings-section input::placeholder {
+            color: #5a7a8a;
+        }
+        .settings-section .update-btn {
+            background: #1d6b4a;
+            border: none;
+            color: #d4e3ef;
+            padding: 0.35rem 1.2rem;
+            border-radius: 2.5rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid #2d8f62;
+            touch-action: manipulation;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .settings-section .update-btn:hover {
+            background: #2a8a5e;
+            border-color: #3daf77;
+        }
+        .settings-section .update-btn:active {
+            transform: scale(0.96);
+        }
+        .settings-section .update-btn.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .settings-section .settings-status {
+            font-size: 0.65rem;
+            color: #7a96aa;
+            padding: 0.1rem 0.2rem;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+        .settings-section .settings-status.success {
+            color: #3daf77;
+        }
+        .settings-section .settings-status.error {
+            color: #af5a5a;
+        }
+
+        /* -------- PLAYER POOL - STICKY WITH HORIZONTAL WRAP -------- */
+        .player-pool-wrapper {
+            position: sticky;
+            top: 0.8rem;
+            z-index: 100;
+            background: #0f1a26;
+            padding: 0.15rem 0;
+            border-radius: 1.8rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .player-pool {
+            background: #1e3140;
+            padding: 0.6rem 0.5rem 0.5rem;
+            border-radius: 1.8rem;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            max-height: 400px;
+        }
+        .player-pool h2 {
+            font-weight: 400;
+            font-size: 1.1rem;
+            margin-bottom: 0.4rem;
+            padding: 0 0.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3a5064;
+            padding-bottom: 0.25rem;
+            flex-shrink: 0;
+        }
+        .player-list-scroll-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            min-height: 40px;
+            max-height: 220px;
+            padding-right: 4px;
+            margin-right: -4px;
+            scrollbar-width: thin;
+            scrollbar-color: #4a6a7e #1a2c3a;
+        }
+        .player-list-scroll-wrapper::-webkit-scrollbar {
+            width: 8px;
+        }
+        .player-list-scroll-wrapper::-webkit-scrollbar-track {
+            background: #1a2c3a;
+            border-radius: 10px;
+            margin: 2px 0;
+        }
+        .player-list-scroll-wrapper::-webkit-scrollbar-thumb {
+            background: #4a6a7e;
+            border-radius: 10px;
+            border: 2px solid #1a2c3a;
+        }
+        .player-list-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #5a8a9e;
+        }
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem 0.4rem;
+            padding: 0.2rem 0;
+            align-content: flex-start;
+        }
+        .player-item {
+            padding: 0.2rem 0.7rem;
+            border-radius: 2rem;
+            cursor: grab;
+            font-weight: 500;
+            font-size: 0.75rem;
+            transition: background 0.15s, transform 0.1s, opacity 0.15s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            flex: 0 1 auto;
+            position: relative;
+            z-index: 1;
+            line-height: 1.3;
+            min-height: 26px;
+            display: inline-flex;
+            align-items: center;
+            width: auto;
+            max-width: 100%;
+            white-space: nowrap;
+        }
+        /* Attendance color coding */
+        .player-item.status-0 {
+            background: #1a6b3c;
+            border-color: #2d8f52;
+        }
+        .player-item.status-0:hover {
+            background: #228a4a;
+            border-color: #3daf6a;
+        }
+        .player-item.status-2 {
+            background: #6b5a1a;
+            border-color: #8f7a2d;
+        }
+        .player-item.status-2:hover {
+            background: #8a7222;
+            border-color: #af9a3d;
+        }
+        .player-item.status-null {
+            background: #3a3f4a;
+            border-color: #5a5f6a;
+        }
+        .player-item.status-null:hover {
+            background: #4a4f5a;
+            border-color: #6a7a8a;
+        }
+        .player-item.status-1 {
+            background: #6b1a1a;
+            border-color: #8f2d2d;
+        }
+        .player-item.status-1:hover {
+            background: #8a2222;
+            border-color: #af3d3d;
+        }
+        /* Goalie special styling */
+        .player-item.goalie {
+            background: #1a3a6b;
+            border-color: #2d5a8f;
+        }
+        .player-item.goalie:hover {
+            background: #224a8a;
+            border-color: #3d7aaf;
+        }
+        .player-item.goalie::after {
+            content: " 🧤";
+            font-size: 0.65rem;
+            opacity: 0.8;
+        }
+        .player-item:active {
+            cursor: grabbing;
+        }
+        .player-item.dragging {
+            opacity: 0.3;
+            transform: scale(0.92);
+            z-index: 1000;
+        }
+        .player-item.drag-source {
+            opacity: 0.3;
+        }
+        .empty-pool-msg {
+            color: #7a96aa;
+            font-style: italic;
+            padding: 0.4rem 0.5rem;
+            text-align: center;
+            width: 100%;
+            font-size: 0.8rem;
+        }
+        .pool-count {
+            background: #253c4e;
+            padding: 0.05rem 0.6rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+        }
+        .attendance-legend {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            font-size: 0.6rem;
+            padding: 0.2rem 0.2rem;
+            margin-top: 0.15rem;
+            border-top: 1px solid #3a5064;
+            opacity: 0.8;
+            flex-shrink: 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .legend-dot.green { background: #1a6b3c; }
+        .legend-dot.red { background: #6b1a1a; }
+        .legend-dot.yellow { background: #6b5a1a; }
+        .legend-dot.grey { background: #3a3f4a; }
+        .legend-dot.blue { background: #1a3a6b; }
+
+        /* -------- LINE SECTIONS -------- */
+        .lines-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .section {
+            background: #14222e;
+            border-radius: 1.8rem;
+            padding: 0.8rem 0.6rem 1rem;
+            box-shadow: inset 0 0 0 1px #2d4456;
+        }
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
+            padding: 0 0.25rem;
+        }
+        .section-header h2 {
+            font-weight: 400;
+            font-size: 1.1rem;
+            letter-spacing: 0.2px;
+        }
+        .section-header span {
+            background: #2a4052;
+            padding: 0.05rem 0.6rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            color: #b6d0e0;
+        }
+        .grid {
+            display: grid;
+            gap: 0.4rem;
+        }
+        .grid-forwards {
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+        }
+        .grid-defense {
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+        }
+        .cell {
+            background: #1e3142;
+            border-radius: 1.2rem;
+            padding: 0.3rem 0.15rem;
+            min-height: 2.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: background 0.15s, box-shadow 0.1s, border-color 0.15s;
+            border: 2px dashed #3f5a6e;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #d3e2ee;
+            word-break: break-word;
+            position: relative;
+            min-height: 2.8rem;
+        }
+        .cell.drag-over {
+            background: #2b4a62;
+            border-color: #8bb6d0;
+            border-style: solid;
+            box-shadow: 0 0 0 2px #5f8aa3, inset 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .cell .player-item {
+            width: 100%;
+            padding: 0.2rem 0.1rem;
+            text-align: center;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            cursor: grab;
+            touch-action: none;
+            position: relative;
+            z-index: 2;
+            border: 1px solid rgba(255,255,255,0.08);
+            min-height: 26px;
+            justify-content: center;
+            display: flex;
+            white-space: nowrap;
+        }
+        .cell .player-item:active {
+            cursor: grabbing;
+        }
+        .cell .player-item.dragging {
+            opacity: 0.2;
+            z-index: 1000;
+        }
+        .cell .player-item.drag-source {
+            opacity: 0.2;
+        }
+        .empty-cell {
+            color: #5f7e93;
+            font-size: 0.6rem;
+            letter-spacing: 0.3px;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* -------- BUTTONS -------- */
+        .reset-btn {
+            background: #2b4052;
+            border: none;
+            color: #d4e3ef;
+            padding: 0.25rem 0.8rem;
+            border-radius: 2.5rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid #4b6a80;
+            touch-action: manipulation;
+            flex: 1;
+            min-width: 60px;
+        }
+        .reset-btn:hover {
+            background: #3f5f78;
+            border-color: #79a0b8;
+        }
+        .copy-btn {
+            background: #1d6b4a;
+            border: 1px solid #2d8f62;
+        }
+        .copy-btn:hover {
+            background: #2a8a5e;
+            border-color: #3daf77;
+        }
+        .auto-btn {
+            background: #6b4a1d;
+            border: 1px solid #8f622d;
+        }
+        .auto-btn:hover {
+            background: #8a5e2a;
+            border-color: #af773d;
+        }
+        .clear-btn {
+            background: #3a2f3f;
+            border: 1px solid #634f5c;
+        }
+        .clear-btn:hover {
+            background: #5d4354;
+        }
+        .footer {
+            margin-top: 0.2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .pool-actions {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 0.3rem;
+            flex-shrink: 0;
+        }
+        .save-indicator {
+            font-size: 0.6rem;
+            color: #5a8a6a;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .save-indicator .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #3daf77;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1d6b4a;
+            color: #fff;
+            padding: 0.6rem 1.5rem;
+            border-radius: 3rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            z-index: 10000;
+            border: 1px solid #3daf77;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* -------- MOBILE TWEAKS -------- */
+        @media (max-width: 600px) {
+            .app { padding: 0.5rem; }
+            h1 { font-size: 1.2rem; margin-bottom: 0.8rem; }
+            .section { padding: 0.5rem 0.35rem 0.7rem; }
+            .cell { min-height: 2.4rem; padding: 0.2rem 0.1rem; font-size: 0.65rem; border-radius: 1rem; min-height: 2.4rem; }
+            .cell .player-item { font-size: 0.65rem; padding: 0.15rem 0.05rem; min-height: 22px; }
+            .grid-forwards { gap: 0.3rem; }
+            .grid-defense { gap: 0.3rem; }
+            .player-item { font-size: 0.7rem; padding: 0.15rem 0.6rem; min-height: 24px; }
+            .player-pool { padding: 0.4rem 0.35rem; max-height: 300px; }
+            .player-pool h2 { font-size: 1rem; }
+            .section-header h2 { font-size: 0.95rem; }
+            .reset-btn { font-size: 0.65rem; padding: 0.2rem 0.6rem; min-width: 50px; }
+            .player-list-scroll-wrapper { max-height: 150px; }
+            .toast { font-size: 0.75rem; padding: 0.5rem 1.2rem; bottom: 1rem; }
+            .player-pool-wrapper {
+                top: 0.3rem;
+                padding: 0.05rem 0;
+            }
+            .attendance-legend { font-size: 0.55rem; gap: 0.4rem; }
+            .legend-dot { width: 8px; height: 8px; }
+            .pool-count { font-size: 0.65rem; padding: 0.05rem 0.5rem; }
+            .save-indicator { font-size: 0.5rem; }
+            .settings-section { padding: 0.5rem 0.6rem; }
+            .settings-section input { font-size: 0.7rem; padding: 0.35rem 0.6rem; }
+            .settings-section .update-btn { font-size: 0.7rem; padding: 0.3rem 0.8rem; }
+            .settings-section .settings-row { flex-wrap: wrap; }
+            .settings-section .settings-row input { min-width: 100px; }
+            .settings-section .settings-row .update-btn { flex: 1; min-width: 80px; text-align: center; }
+            .settings-status { font-size: 0.6rem; }
+            .next-game-banner { padding: 0.4rem 0.5rem; flex-direction: column; align-items: stretch; gap: 0.3rem; }
+            .next-game-banner .game-info { font-size: 0.75rem; }
+            .next-game-banner .nav-section { align-self: center; }
+            .next-game-banner .refresh-btn { align-self: flex-end; }
+            .next-game-banner .nav-btn { width: 32px; height: 32px; font-size: 1rem; }
+        }
+        @media (max-width: 400px) {
+            .grid-forwards { grid-template-columns: repeat(3, 1fr); }
+            .grid-defense { grid-template-columns: repeat(2, 1fr); }
+            .cell { min-height: 2rem; font-size: 0.6rem; padding: 0.15rem 0.05rem; min-height: 2rem; }
+            .cell .player-item { font-size: 0.6rem; padding: 0.1rem 0.05rem; min-height: 20px; }
+            .player-list-scroll-wrapper { max-height: 120px; }
+            .player-pool { max-height: 260px; }
+            .player-item { font-size: 0.65rem; padding: 0.1rem 0.5rem; min-height: 22px; }
+            .settings-section .settings-row { flex-direction: column; }
+            .settings-section .settings-row input { width: 100%; min-width: unset; }
+            .settings-section .settings-row .update-btn { width: 100%; }
+        }
+        @media (min-width: 700px) {
+            .main-grid {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 1.5rem;
+            }
+            .player-pool-wrapper {
+                flex: 0 0 280px;
+                min-width: 200px;
+                position: sticky;
+                top: 0.8rem;
+                z-index: 100;
+                align-self: flex-start;
+                padding: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+            .player-pool {
+                max-height: calc(100vh - 3rem);
+            }
+            .player-list-scroll-wrapper {
+                max-height: 380px;
+            }
+            .lines-container {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .player-item {
+                flex: 0 1 auto;
+            }
+            .settings-section .settings-row {
+                flex-wrap: nowrap;
+            }
+        }
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            background: #2a3f50;
+            padding: 0.25rem 0.6rem;
+            border-radius: 2.5rem;
+            font-weight: 500;
+            font-size: 0.75rem;
+            border: 2px solid #8bb6d0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            color: #f0f4fa;
+            opacity: 0.92;
+            transform: translate(-50%, -50%) scale(1.05);
+            white-space: nowrap;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <h1>
+        🐉 Burnaby Dragoons · Line Generator
+        <small>tap & drag</small>
+        <span class="save-indicator" id="saveIndicator">
+            <span class="dot"></span> Auto-saved
+        </span>
+    </h1>
+
+    <!-- NEXT GAME BANNER -->
+    <div id="nextGameBanner" class="next-game-banner">
+        <div class="nav-section">
+            <button id="prevGameBtn" class="nav-btn" title="Previous game">◀</button>
+            <span class="game-counter" id="gameCounter">0/0</span>
+            <button id="nextGameBtn" class="nav-btn" title="Next game">▶</button>
+        </div>
+        <div class="game-info" id="gameInfo">
+            <span class="loading">Loading schedule...</span>
+        </div>
+        <button id="refreshScheduleBtn" class="refresh-btn">🔄 Refresh</button>
+    </div>
+
+    <div class="main-grid" id="appContent">
+        <!-- PLAYER POOL - STICKY WITH HORIZONTAL WRAP -->
+        <div class="player-pool-wrapper">
+            <div class="player-pool">
+                <h2>
+                    <span>📋 Players</span>
+                    <span class="pool-count" id="poolCount">0</span>
+                </h2>
+                <div class="player-list-scroll-wrapper">
+                    <div id="playerList" class="player-list">
+                        <div class="loading">Loading players...</div>
+                    </div>
+                </div>
+                <div class="attendance-legend">
+                    <span class="legend-item"><span class="legend-dot green"></span> Attending</span>
+                    <span class="legend-item"><span class="legend-dot yellow"></span> Maybe</span>
+                    <span class="legend-item"><span class="legend-dot grey"></span> No answer</span>
+                    <span class="legend-item"><span class="legend-dot red"></span> Not attending</span>
+                    <span class="legend-item"><span class="legend-dot blue"></span> Goalie</span>
+                </div>
+                <div class="pool-actions">
+                    <button id="resetPlayersBtn" class="reset-btn">↺ Reset roster</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINES -->
+        <div class="lines-container">
+            <!-- FORWARDS -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>Forward lines</h2>
+                    <span>3x3</span>
+                </div>
+                <div id="forwardsGrid" class="grid grid-forwards">
+                    <!-- 9 cells -->
+                </div>
+            </div>
+
+            <!-- DEFENSE (3x2) -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>Defense pairs</h2>
+                    <span>3x2</span>
+                </div>
+                <div id="defenseGrid" class="grid grid-defense">
+                    <!-- 6 cells: 3 rows, 2 columns -->
+                </div>
+            </div>
+
+            <div class="footer">
+                <button id="autoBtn" class="reset-btn auto-btn">🎲 Auto Generate</button>
+                <button id="copyBtn" class="reset-btn copy-btn">📋 Copy</button>
+                <button id="clearAllBtn" class="reset-btn clear-btn">🧹 Clear all lines</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS SECTION - BOTTOM -->
+    <div class="settings-section" style="margin-top: 1.5rem;">
+        <div class="settings-row">
+            <label for="teamNameInput">🏷️ Team:</label>
+            <input type="text" id="teamNameInput" placeholder="Team name to filter..." value="Burnaby Dragoons" />
+        </div>
+        <div class="settings-row">
+            <label for="scheduleUrl">📡 Schedule URL:</label>
+            <input type="text" id="scheduleUrl" placeholder="Paste schedule API URL here..." />
+            <button id="updateScheduleBtn" class="update-btn">🔄 Update</button>
+        </div>
+        <div id="settingsStatus" class="settings-status">Ready</div>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast" class="toast">✅ Copied to clipboard!</div>
+
+<script>
+    (function() {
+        // ----- STORAGE KEYS -----
+        const STORAGE_KEY_FORWARDS = 'dragoons_lines_forwards';
+        const STORAGE_KEY_DEFENSE = 'dragoons_lines_defense';
+        const STORAGE_KEY_URL = 'dragoons_schedule_url';
+        const STORAGE_KEY_TEAM = 'dragoons_team_name';
+
+        // ----- DEFAULT VALUES (UPDATED) -----
+        const DEFAULT_SCHEDULE_URL = 'https://canlan2-api.sportninja.net/v1/schedules/btm5NkDxsGpcoJaz/games?order=asc&exclude_cancelled_games=1&team_id=Ht3HxmBgvbJlq17I&include_officials=1&starts_after=2026-09-07T10%3A00%3A00.000Z&starts_before=2027-09-09T12%3A00%3A00.000Z&page=1';
+        const DEFAULT_TEAM_NAME = 'Burnaby Dragoons';
+        const GAME_API_BASE = 'https://canlan2-api.sportninja.net/v1/games/';
+
+        // ----- STATE -----
+        let allPlayers = [];
+        let playerStatusMap = {};
+        let playerTypeMap = {};
+        let forwards = Array(9).fill(null);
+        let defense = Array(6).fill(null);
+        let isLoading = true;
+        let saveTimeout = null;
+        let currentScheduleUrl = '';
+        let teamName = DEFAULT_TEAM_NAME;
+        let teamGames = [];
+        let currentGameIndex = -1;
+        let nextGameData = null;
+
+        // DOM refs
+        const playerListEl = document.getElementById('playerList');
+        const forwardsGridEl = document.getElementById('forwardsGrid');
+        const defenseGridEl = document.getElementById('defenseGrid');
+        const resetBtn = document.getElementById('resetPlayersBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const autoBtn = document.getElementById('autoBtn');
+        const poolCountEl = document.getElementById('poolCount');
+        const toastEl = document.getElementById('toast');
+        const saveIndicator = document.getElementById('saveIndicator');
+        const scheduleUrlInput = document.getElementById('scheduleUrl');
+        const teamNameInput = document.getElementById('teamNameInput');
+        const updateScheduleBtn = document.getElementById('updateScheduleBtn');
+        const refreshScheduleBtn = document.getElementById('refreshScheduleBtn');
+        const prevGameBtn = document.getElementById('prevGameBtn');
+        const nextGameBtn = document.getElementById('nextGameBtn');
+        const gameCounterEl = document.getElementById('gameCounter');
+        const settingsStatusEl = document.getElementById('settingsStatus');
+        const gameInfoEl = document.getElementById('gameInfo');
+
+        // ----- DRAG STATE -----
+        let dragState = {
+            isDragging: false,
+            element: null,
+            name: null,
+            sourceType: null,
+            sourceIndex: null,
+            ghost: null,
+        };
+
+        // ----- SAVE/LOAD FUNCTIONS -----
+        function saveLines() {
+            try {
+                localStorage.setItem(STORAGE_KEY_FORWARDS, JSON.stringify(forwards));
+                localStorage.setItem(STORAGE_KEY_DEFENSE, JSON.stringify(defense));
+                saveIndicator.style.opacity = '1';
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    saveIndicator.style.opacity = '0.6';
+                }, 2000);
+            } catch (e) {
+                console.warn('Could not save to localStorage:', e);
+            }
+        }
+
+        function loadLines() {
+            try {
+                const savedForwards = localStorage.getItem(STORAGE_KEY_FORWARDS);
+                const savedDefense = localStorage.getItem(STORAGE_KEY_DEFENSE);
+                
+                if (savedForwards) {
+                    const parsed = JSON.parse(savedForwards);
+                    if (Array.isArray(parsed) && parsed.length === 9) {
+                        forwards = parsed;
+                    }
+                }
+                if (savedDefense) {
+                    const parsed = JSON.parse(savedDefense);
+                    if (Array.isArray(parsed) && parsed.length === 6) {
+                        defense = parsed;
+                    }
+                }
+                return true;
+            } catch (e) {
+                console.warn('Could not load from localStorage:', e);
+                return false;
+            }
+        }
+
+        function saveUrl(url) {
+            try {
+                localStorage.setItem(STORAGE_KEY_URL, url);
+            } catch (e) {
+                console.warn('Could not save URL:', e);
+            }
+        }
+
+        function loadUrl() {
+            try {
+                return localStorage.getItem(STORAGE_KEY_URL) || DEFAULT_SCHEDULE_URL;
+            } catch (e) {
+                return DEFAULT_SCHEDULE_URL;
+            }
+        }
+
+        function saveTeamName(name) {
+            try {
+                localStorage.setItem(STORAGE_KEY_TEAM, name);
+            } catch (e) {
+                console.warn('Could not save team name:', e);
+            }
+        }
+
+        function loadTeamName() {
+            try {
+                return localStorage.getItem(STORAGE_KEY_TEAM) || DEFAULT_TEAM_NAME;
+            } catch (e) {
+                return DEFAULT_TEAM_NAME;
+            }
+        }
+
+        // ----- FORMAT DATE -----
+        function formatGameDate(dateString) {
+            const date = new Date(dateString);
+            const options = { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/Vancouver'
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // ----- UPDATE NAV BUTTONS -----
+        function updateNavButtons() {
+            if (teamGames.length === 0) {
+                prevGameBtn.disabled = true;
+                nextGameBtn.disabled = true;
+                gameCounterEl.textContent = '0/0';
+                return;
+            }
+            prevGameBtn.disabled = currentGameIndex <= 0;
+            nextGameBtn.disabled = currentGameIndex >= teamGames.length - 1;
+            gameCounterEl.textContent = `${currentGameIndex + 1}/${teamGames.length}`;
+        }
+
+        // ----- LOAD GAME BY INDEX -----
+        async function loadGameByIndex(index) {
+            if (index < 0 || index >= teamGames.length) return;
+            
+            const game = teamGames[index];
+            currentGameIndex = index;
+            nextGameData = game;
+            
+            displayGameInfo(game);
+            updateNavButtons();
+            await fetchGameRoster(game.id);
+        }
+
+        // ----- DISPLAY GAME INFO -----
+        function displayGameInfo(game) {
+            const homeTeam = game.homeTeam ? game.homeTeam.name : 'TBD';
+            const awayTeam = game.visitingTeam ? game.visitingTeam.name : 'TBD';
+            const isTeamHome = game.homeTeam && game.homeTeam.name === teamName;
+            const opponent = isTeamHome ? awayTeam : homeTeam;
+            const location = isTeamHome ? '🏠 Home' : '✈️ Away';
+            const rink = game.venue ? game.venue.name : 'TBD';
+            const dateTime = formatGameDate(game.starts_at);
+
+            gameInfoEl.innerHTML = `
+                <span class="label">Game:</span>
+                <span class="teams">
+                    ${teamName} <span class="vs">vs</span> ${opponent}
+                    <span style="font-size:0.6rem;background:#2a4a5a;padding:0.05rem 0.5rem;border-radius:1rem;margin-left:0.2rem;">${location}</span>
+                </span>
+                <span class="datetime">${dateTime}</span>
+                <span class="rink">${rink}</span>
+            `;
+        }
+
+        // ----- FETCH SCHEDULE AND EXTRACT TEAM GAMES -----
+        async function fetchSchedule(url, team, selectIndex = -1) {
+            const statusEl = settingsStatusEl;
+            const btn = updateScheduleBtn;
+            
+            try {
+                statusEl.textContent = '⏳ Fetching schedule...';
+                statusEl.className = 'settings-status';
+                btn.classList.add('loading');
+                btn.textContent = '⏳ Loading...';
+                refreshScheduleBtn.classList.add('loading');
+                refreshScheduleBtn.textContent = '⏳';
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const data = await response.json();
+                
+                if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+                    throw new Error('No games found in schedule');
+                }
+
+                // Extract all games for the selected team (past and future)
+                teamGames = [];
+                for (const game of data.data) {
+                    const isTeamHome = game.homeTeam && game.homeTeam.name === team;
+                    const isTeamAway = game.visitingTeam && game.visitingTeam.name === team;
+                    
+                    if (isTeamHome || isTeamAway) {
+                        teamGames.push(game);
+                    }
+                }
+
+                if (teamGames.length === 0) {
+                    throw new Error(`No games found for "${team}" in schedule`);
+                }
+
+                // Save the schedule URL and team name
+                currentScheduleUrl = url;
+                teamName = team;
+                saveUrl(url);
+                saveTeamName(team);
+
+                // Determine which game to show - ALWAYS default to next upcoming game
+                let targetIndex = selectIndex;
+                if (targetIndex < 0 || targetIndex >= teamGames.length) {
+                    const now = new Date();
+                    targetIndex = -1;
+                    for (let i = 0; i < teamGames.length; i++) {
+                        const gameDate = new Date(teamGames[i].starts_at);
+                        if (gameDate > now) {
+                            targetIndex = i;
+                            break;
+                        }
+                    }
+                    if (targetIndex === -1) {
+                        targetIndex = teamGames.length - 1;
+                    }
+                }
+
+                const game = teamGames[targetIndex];
+                currentGameIndex = targetIndex;
+                nextGameData = game;
+                
+                displayGameInfo(game);
+                updateNavButtons();
+                statusEl.textContent = `✅ Found ${teamGames.length} games for "${team}". Showing game ${targetIndex + 1}/${teamGames.length}`;
+                statusEl.className = 'settings-status success';
+
+                await fetchGameRoster(game.id);
+
+            } catch (error) {
+                console.error('Error fetching schedule:', error);
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                statusEl.className = 'settings-status error';
+                gameInfoEl.innerHTML = `<span class="no-game">⚠️ ${error.message}</span>`;
+                showToast('❌ Failed to load schedule');
+            } finally {
+                btn.classList.remove('loading');
+                btn.textContent = '🔄 Update';
+                refreshScheduleBtn.classList.remove('loading');
+                refreshScheduleBtn.textContent = '🔄 Refresh';
+            }
+        }
+
+        // ----- FETCH GAME ROSTER -----
+        async function fetchGameRoster(gameId) {
+            const url = GAME_API_BASE + gameId;
+            const statusEl = settingsStatusEl;
+            
+            try {
+                statusEl.textContent = '⏳ Fetching roster...';
+                statusEl.className = 'settings-status';
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const data = await response.json();
+                
+                const playerRosters = data.data?.playerRosters || [];
+                let teamRoster = null;
+                
+                for (const roster of playerRosters) {
+                    if (roster.team && roster.team.name === teamName) {
+                        teamRoster = roster;
+                        break;
+                    }
+                }
+                
+                if (!teamRoster) {
+                    throw new Error(`"${teamName}" not found in this game`);
+                }
+                
+                const players = teamRoster.players || [];
+                if (players.length === 0) {
+                    throw new Error(`No players found for "${teamName}"`);
+                }
+                
+                const newPlayers = [];
+                const newStatusMap = {};
+                const newTypeMap = {};
+                
+                players.forEach(p => {
+                    const firstName = p.name_first;
+                    if (firstName) {
+                        newPlayers.push(firstName);
+                        newStatusMap[firstName] = p.attendance_status !== undefined && p.attendance_status !== null ? p.attendance_status : null;
+                        
+                        const isGoalie = p.player_type && p.player_type.is_goalie === 1;
+                        newTypeMap[firstName] = isGoalie ? 'goalie' : 'skater';
+                    }
+                });
+
+                const playerSet = new Set(newPlayers);
+                forwards = forwards.map(p => {
+                    if (p && !playerSet.has(p)) {
+                        return null;
+                    }
+                    return p;
+                });
+                defense = defense.map(p => {
+                    if (p && !playerSet.has(p)) {
+                        return null;
+                    }
+                    return p;
+                });
+
+                allPlayers = newPlayers;
+                playerStatusMap = newStatusMap;
+                playerTypeMap = newTypeMap;
+
+                saveLines();
+
+                const goalieCount = Object.values(newTypeMap).filter(t => t === 'goalie').length;
+                statusEl.textContent = `✅ "${teamName}": ${allPlayers.length} players (${goalieCount} goalies)`;
+                statusEl.className = 'settings-status success';
+                
+                isLoading = false;
+                renderAll();
+                showToast(`✅ Roster loaded! ${allPlayers.length} players. Lines preserved.`);
+            } catch (error) {
+                console.error('Error fetching roster:', error);
+                statusEl.textContent = `❌ Roster error: ${error.message}`;
+                statusEl.className = 'settings-status error';
+                playerListEl.innerHTML = `<div class="empty-pool-msg">⚠️ Failed to load roster. ${error.message}</div>`;
+                showToast('❌ Failed to load roster');
+            }
+        }
+
+        // ----- STATUS HELPER -----
+        function getStatusClass(name) {
+            const status = playerStatusMap[name];
+            const isGoalie = playerTypeMap[name] === 'goalie';
+            
+            if (isGoalie) return 'goalie';
+            if (status === 0) return 'status-0';
+            if (status === 1) return 'status-1';
+            if (status === 2) return 'status-2';
+            return 'status-null';
+        }
+
+        // ----- SORT PLAYERS BY STATUS (goalie at bottom) -----
+        function sortPlayersByStatus(players) {
+            return players.slice().sort((a, b) => {
+                const isGoalieA = playerTypeMap[a] === 'goalie';
+                const isGoalieB = playerTypeMap[b] === 'goalie';
+                
+                if (isGoalieA && !isGoalieB) return 1;
+                if (!isGoalieA && isGoalieB) return -1;
+                
+                const statusA = playerStatusMap[a];
+                const statusB = playerStatusMap[b];
+                
+                const getPriority = (status) => {
+                    if (status === 0) return 0;
+                    if (status === 2) return 1;
+                    if (status === null || status === undefined) return 2;
+                    if (status === 1) return 3;
+                    return 2;
+                };
+                
+                return getPriority(statusA) - getPriority(statusB);
+            });
+        }
+
+        // ----- AUTO GENERATE -----
+        function autoGenerate() {
+            if (allPlayers.length === 0) {
+                showToast('⚠️ No players loaded. Please update the schedule first.');
+                return;
+            }
+            
+            const skaters = allPlayers.filter(name => playerTypeMap[name] !== 'goalie');
+            
+            if (skaters.length === 0) {
+                showToast('⚠️ No skaters available. Goalies cannot be placed on lines.');
+                return;
+            }
+            
+            forwards = Array(9).fill(null);
+            defense = Array(6).fill(null);
+            
+            let available = [...skaters];
+            for (let i = available.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [available[i], available[j]] = [available[j], available[i]];
+            }
+            
+            let playerIndex = 0;
+            for (let i = 0; i < forwards.length; i++) {
+                if (playerIndex < available.length) {
+                    forwards[i] = available[playerIndex++];
+                } else {
+                    break;
+                }
+            }
+            
+            for (let i = 0; i < defense.length; i++) {
+                if (playerIndex < available.length) {
+                    defense[i] = available[playerIndex++];
+                } else {
+                    break;
+                }
+            }
+            
+            renderAll();
+            saveLines();
+            showToast('🎲 Lines auto-generated!');
+        }
+
+        // ----- COPY FUNCTION -----
+        function copyLines() {
+            function getFirstName(fullName) {
+                if (!fullName) return '';
+                return fullName.trim();
+            }
+
+            let forwardLines = [];
+            for (let row = 0; row < 3; row++) {
+                let line = [];
+                for (let col = 0; col < 3; col++) {
+                    const index = row * 3 + col;
+                    const player = forwards[index];
+                    if (player) {
+                        line.push(getFirstName(player));
+                    }
+                }
+                if (line.length > 0) {
+                    forwardLines.push(line.join(' '));
+                }
+            }
+
+            let defenseLines = [];
+            for (let row = 0; row < 3; row++) {
+                let pair = [];
+                for (let col = 0; col < 2; col++) {
+                    const index = row * 2 + col;
+                    const player = defense[index];
+                    if (player) {
+                        pair.push(getFirstName(player));
+                    }
+                }
+                if (pair.length > 0) {
+                    defenseLines.push(pair.join(' '));
+                }
+            }
+
+            let output = 'Lines for tonight:\n';
+            
+            if (forwardLines.length > 0) {
+                output += forwardLines.join('\n');
+            }
+            if (defenseLines.length > 0) {
+                if (forwardLines.length > 0) output += '\n\n';
+                output += defenseLines.join('\n');
+            }
+
+            if (forwardLines.length === 0 && defenseLines.length === 0) {
+                showToast('⚠️ No players on the ice!');
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(output).then(() => {
+                    showToast('✅ Copied to clipboard!');
+                }).catch(() => {
+                    fallbackCopy(output);
+                });
+            } else {
+                fallbackCopy(output);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('✅ Copied to clipboard!');
+            } catch (err) {
+                showToast('❌ Failed to copy. Please copy manually.');
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        let toastTimeout = null;
+
+        function showToast(message) {
+            toastEl.textContent = message;
+            toastEl.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toastEl.classList.remove('show');
+            }, 2500);
+        }
+
+        // ----- RENDER -----
+        function renderPlayerPool() {
+            if (isLoading) {
+                playerListEl.innerHTML = `<div class="loading">Loading players...</div>`;
+                return;
+            }
+
+            if (allPlayers.length === 0) {
+                playerListEl.innerHTML = `<div class="empty-pool-msg">No players loaded. Click "Update" to fetch schedule and roster.</div>`;
+                poolCountEl.textContent = '0';
+                return;
+            }
+
+            const placedNames = new Set();
+            forwards.forEach(p => { if (p) placedNames.add(p); });
+            defense.forEach(p => { if (p) placedNames.add(p); });
+
+            const available = allPlayers.filter(name => !placedNames.has(name));
+            poolCountEl.textContent = available.length;
+
+            if (available.length === 0) {
+                playerListEl.innerHTML = `<div class="empty-pool-msg">All players are on the ice 🏒</div>`;
+                return;
+            }
+
+            const sortedAvailable = sortPlayersByStatus(available);
+
+            let html = '';
+            sortedAvailable.forEach(name => {
+                const statusClass = getStatusClass(name);
+                const isGoalie = playerTypeMap[name] === 'goalie';
+                const displayName = isGoalie ? name : name;
+                html += `<div class="player-item ${statusClass}" data-name="${name}" data-status="${statusClass}">${displayName}</div>`;
+            });
+            playerListEl.innerHTML = html;
+
+            document.querySelectorAll('#playerList .player-item').forEach(el => {
+                el.addEventListener('mousedown', onDragStart);
+                el.addEventListener('touchstart', onDragStart, { passive: false });
+            });
+        }
+
+        function renderGrids() {
+            renderForwards();
+            renderDefense();
+        }
+
+        function renderForwards() {
+            let html = '';
+            for (let i = 0; i < forwards.length; i++) {
+                const player = forwards[i];
+                let content;
+                if (player) {
+                    const statusClass = getStatusClass(player);
+                    const isGoalie = playerTypeMap[player] === 'goalie';
+                    const displayName = isGoalie ? player : player;
+                    content = `<div class="player-item ${statusClass}" data-name="${player}" data-cell-index="${i}" data-cell-type="forward">${displayName}</div>`;
+                } else {
+                    content = `<span class="empty-cell">⬇ drop</span>`;
+                }
+                html += `<div class="cell" data-cell-type="forward" data-index="${i}">${content}</div>`;
+            }
+            forwardsGridEl.innerHTML = html;
+            attachCellEvents(forwardsGridEl);
+        }
+
+        function renderDefense() {
+            let html = '';
+            for (let i = 0; i < defense.length; i++) {
+                const player = defense[i];
+                let content;
+                if (player) {
+                    const statusClass = getStatusClass(player);
+                    const isGoalie = playerTypeMap[player] === 'goalie';
+                    const displayName = isGoalie ? player : player;
+                    content = `<div class="player-item ${statusClass}" data-name="${player}" data-cell-index="${i}" data-cell-type="defense">${displayName}</div>`;
+                } else {
+                    content = `<span class="empty-cell">⬇ drop</span>`;
+                }
+                html += `<div class="cell" data-cell-type="defense" data-index="${i}">${content}</div>`;
+            }
+            defenseGridEl.innerHTML = html;
+            attachCellEvents(defenseGridEl);
+        }
+
+        function attachCellEvents(container) {
+            container.querySelectorAll('.cell .player-item').forEach(el => {
+                el.addEventListener('mousedown', onDragStart);
+                el.addEventListener('touchstart', onDragStart, { passive: false });
+            });
+        }
+
+        // ----- DRAG START -----
+        function onDragStart(e) {
+            const el = e.target.closest('.player-item');
+            if (!el) return;
+
+            const name = el.dataset.name;
+            if (!name) return;
+
+            let startX, startY;
+            if (e.type === 'touchstart') {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+            } else {
+                startX = e.clientX;
+                startY = e.clientY;
+            }
+
+            const cell = el.closest('.cell');
+            let sourceType = null;
+            let sourceIndex = null;
+
+            if (cell) {
+                sourceType = cell.dataset.cellType;
+                sourceIndex = parseInt(cell.dataset.index, 10);
+            }
+
+            const ghost = document.createElement('div');
+            ghost.className = 'drag-ghost';
+            ghost.textContent = name;
+            ghost.style.display = 'none';
+            document.body.appendChild(ghost);
+
+            dragState.isDragging = false;
+            dragState.element = el;
+            dragState.name = name;
+            dragState.sourceType = sourceType;
+            dragState.sourceIndex = sourceIndex;
+            dragState.ghost = ghost;
+            dragState.startX = startX;
+            dragState.startY = startY;
+
+            el.classList.add('drag-source');
+
+            if (e.type === 'touchstart') {
+                document.addEventListener('touchmove', onTouchMove, { passive: false });
+                document.addEventListener('touchend', onTouchEnd, { passive: false });
+                document.addEventListener('touchcancel', onTouchEnd, { passive: false });
+            } else {
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            }
+        }
+
+        function onTouchMove(e) {
+            const touch = e.touches[0];
+            const dx = touch.clientX - dragState.startX;
+            const dy = touch.clientY - dragState.startY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 10 && !dragState.isDragging) {
+                dragState.isDragging = true;
+                e.preventDefault();
+                dragState.ghost.style.display = 'block';
+                dragState.ghost.style.left = touch.clientX + 'px';
+                dragState.ghost.style.top = touch.clientY + 'px';
+            }
+
+            if (dragState.isDragging) {
+                e.preventDefault();
+                dragState.ghost.style.left = touch.clientX + 'px';
+                dragState.ghost.style.top = touch.clientY + 'px';
+
+                document.querySelectorAll('.cell').forEach(c => c.classList.remove('drag-over'));
+                const ghost = dragState.ghost;
+                ghost.style.display = 'none';
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                ghost.style.display = 'block';
+
+                const cell = elementBelow ? elementBelow.closest('.cell') : null;
+                if (cell) {
+                    const cellType = cell.dataset.cellType;
+                    const cellIndex = parseInt(cell.dataset.index, 10);
+                    if (!(dragState.sourceType === cellType && dragState.sourceIndex === cellIndex)) {
+                        cell.classList.add('drag-over');
+                    }
+                }
+            }
+        }
+
+        function onMouseMove(e) {
+            if (!dragState.isDragging) {
+                const dx = e.clientX - dragState.startX;
+                const dy = e.clientY - dragState.startY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance > 5) {
+                    dragState.isDragging = true;
+                    dragState.ghost.style.display = 'block';
+                    dragState.ghost.style.left = e.clientX + 'px';
+                    dragState.ghost.style.top = e.clientY + 'px';
+                } else {
+                    return;
+                }
+            }
+
+            dragState.ghost.style.left = e.clientX + 'px';
+            dragState.ghost.style.top = e.clientY + 'px';
+
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('drag-over'));
+            const ghost = dragState.ghost;
+            ghost.style.display = 'none';
+            const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+            ghost.style.display = 'block';
+
+            const cell = elementBelow ? elementBelow.closest('.cell') : null;
+            if (cell) {
+                const cellType = cell.dataset.cellType;
+                const cellIndex = parseInt(cell.dataset.index, 10);
+                if (!(dragState.sourceType === cellType && dragState.sourceIndex === cellIndex)) {
+                    cell.classList.add('drag-over');
+                }
+            }
+        }
+
+        function onTouchEnd(e) {
+            if (dragState.isDragging) {
+                const touch = e.changedTouches ? e.changedTouches[0] : null;
+                if (touch) {
+                    const ghost = dragState.ghost;
+                    ghost.style.display = 'none';
+                    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                    ghost.style.display = 'block';
+
+                    const cell = elementBelow ? elementBelow.closest('.cell') : null;
+                    if (cell) {
+                        const targetType = cell.dataset.cellType;
+                        const targetIndex = parseInt(cell.dataset.index, 10);
+                        if (!(dragState.sourceType === targetType && dragState.sourceIndex === targetIndex)) {
+                            performMove(dragState.sourceType, dragState.sourceIndex, targetType, targetIndex, dragState.name);
+                        }
+                    } else {
+                        if (dragState.sourceType !== null && dragState.sourceIndex !== null) {
+                            removeFromLine(dragState.sourceType, dragState.sourceIndex);
+                        }
+                    }
+                }
+            }
+            cleanupDrag();
+            renderAll();
+            saveLines();
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+            document.removeEventListener('touchcancel', onTouchEnd);
+        }
+
+        function onMouseUp(e) {
+            if (dragState.isDragging) {
+                const ghost = dragState.ghost;
+                ghost.style.display = 'none';
+                const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+                ghost.style.display = 'block';
+
+                const cell = elementBelow ? elementBelow.closest('.cell') : null;
+                if (cell) {
+                    const targetType = cell.dataset.cellType;
+                    const targetIndex = parseInt(cell.dataset.index, 10);
+                    if (!(dragState.sourceType === targetType && dragState.sourceIndex === targetIndex)) {
+                        performMove(dragState.sourceType, dragState.sourceIndex, targetType, targetIndex, dragState.name);
+                    }
+                } else {
+                    if (dragState.sourceType !== null && dragState.sourceIndex !== null) {
+                        removeFromLine(dragState.sourceType, dragState.sourceIndex);
+                    }
+                }
+            }
+            cleanupDrag();
+            renderAll();
+            saveLines();
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        function performMove(sourceType, sourceIndex, targetType, targetIndex, playerName) {
+            let targetArray = (targetType === 'forward') ? forwards : defense;
+            let sourceArray = null;
+            if (sourceType === 'forward') sourceArray = forwards;
+            else if (sourceType === 'defense') sourceArray = defense;
+
+            const targetOccupant = targetArray[targetIndex];
+
+            if (sourceArray !== null && sourceIndex !== null) {
+                if (sourceArray[sourceIndex] === playerName) {
+                    if (targetOccupant !== null) {
+                        sourceArray[sourceIndex] = targetOccupant;
+                        targetArray[targetIndex] = playerName;
+                    } else {
+                        sourceArray[sourceIndex] = null;
+                        targetArray[targetIndex] = playerName;
+                    }
+                }
+            } else {
+                if (targetOccupant !== null) {
+                    targetArray[targetIndex] = null;
+                    targetArray[targetIndex] = playerName;
+                } else {
+                    targetArray[targetIndex] = playerName;
+                }
+            }
+        }
+
+        function removeFromLine(sourceType, sourceIndex) {
+            if (sourceType === 'forward') {
+                forwards[sourceIndex] = null;
+            } else if (sourceType === 'defense') {
+                defense[sourceIndex] = null;
+            }
+        }
+
+        function cleanupDrag() {
+            if (dragState.ghost) {
+                dragState.ghost.remove();
+            }
+            if (dragState.element) {
+                dragState.element.classList.remove('drag-source');
+            }
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('drag-over'));
+            dragState.isDragging = false;
+            dragState.element = null;
+            dragState.name = null;
+            dragState.sourceType = null;
+            dragState.sourceIndex = null;
+            dragState.ghost = null;
+        }
+
+        function renderAll() {
+            renderPlayerPool();
+            renderGrids();
+        }
+
+        function resetRoster() {
+            if (allPlayers.length === 0) {
+                showToast('⚠️ No players loaded. Please update the schedule first.');
+                return;
+            }
+            forwards = Array(9).fill(null);
+            defense = Array(6).fill(null);
+            renderAll();
+            saveLines();
+            showToast('↺ Roster reset');
+        }
+
+        function clearAllLines() {
+            forwards = Array(9).fill(null);
+            defense = Array(6).fill(null);
+            renderAll();
+            saveLines();
+            showToast('🧹 All lines cleared');
+        }
+
+        // ----- NAVIGATION -----
+        function goToPrevGame() {
+            if (currentGameIndex > 0) {
+                loadGameByIndex(currentGameIndex - 1);
+            }
+        }
+
+        function goToNextGame() {
+            if (currentGameIndex < teamGames.length - 1) {
+                loadGameByIndex(currentGameIndex + 1);
+            }
+        }
+
+        // ----- REFRESH SCHEDULE -----
+        function refreshSchedule() {
+            const url = scheduleUrlInput.value.trim();
+            const team = teamNameInput.value.trim();
+            
+            if (!url) {
+                settingsStatusEl.textContent = '⚠️ Please enter a schedule URL';
+                settingsStatusEl.className = 'settings-status error';
+                return;
+            }
+            if (!team) {
+                settingsStatusEl.textContent = '⚠️ Please enter a team name';
+                settingsStatusEl.className = 'settings-status error';
+                return;
+            }
+            fetchSchedule(url, team, -1);
+        }
+
+        // ----- INIT -----
+        async function init() {
+            const savedUrl = loadUrl();
+            const savedTeam = loadTeamName();
+            scheduleUrlInput.value = savedUrl;
+            teamNameInput.value = savedTeam;
+            
+            resetBtn.addEventListener('click', resetRoster);
+            clearAllBtn.addEventListener('click', clearAllLines);
+            copyBtn.addEventListener('click', copyLines);
+            autoBtn.addEventListener('click', autoGenerate);
+            
+            updateScheduleBtn.addEventListener('click', refreshSchedule);
+            refreshScheduleBtn.addEventListener('click', refreshSchedule);
+            prevGameBtn.addEventListener('click', goToPrevGame);
+            nextGameBtn.addEventListener('click', goToNextGame);
+
+            scheduleUrlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    refreshSchedule();
+                }
+            });
+            teamNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    refreshSchedule();
+                }
+            });
+
+            await fetchSchedule(savedUrl, savedTeam, -1);
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
