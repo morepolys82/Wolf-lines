@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>Hockey Game Tracker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #f6f8fa;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+    }
+
+    .app {
+      max-width: 500px;
+      width: 100%;
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+      padding: 20px 18px 30px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #0b1b2b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    h1 small {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #4a5e71;
+      margin-left: auto;
+      background: #eef2f6;
+      padding: 4px 14px;
+      border-radius: 40px;
+      letter-spacing: 0.3px;
+    }
+
+    .next-game {
+      background: #0b1b2b;
+      color: white;
+      padding: 16px 18px;
+      border-radius: 16px;
+      margin: 8px 0 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .next-game .label {
+      font-size: 0.85rem;
+      opacity: 0.7;
+      font-weight: 400;
+      display: block;
+    }
+    .next-game .game-info {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .next-game .game-info .rink {
+      font-weight: 400;
+      opacity: 0.8;
+      font-size: 0.95rem;
+    }
+    .next-game .game-info .type-badge {
+      font-weight: 400;
+      opacity: 0.7;
+      font-size: 0.8rem;
+      background: rgba(255,255,255,0.15);
+      padding: 2px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      align-self: flex-start;
+    }
+    .next-game .empty {
+      font-weight: 400;
+      opacity: 0.6;
+      font-size: 0.95rem;
+    }
+
+    .total-badge {
+      background: #dce5ed;
+      color: #1b2d3f;
+      padding: 12px 16px;
+      border-radius: 60px;
+      margin: 8px 0 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-weight: 500;
+      font-size: 1rem;
+    }
+    .total-badge .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-badge .total-row .label {
+      background: transparent;
+      color: #1b2d3f;
+      padding: 0;
+      border-radius: 0;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+    .total-badge .total-row .count {
+      background: #1b2d3f;
+      color: white;
+      padding: 2px 16px;
+      border-radius: 40px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .gear-tally {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: #1b2d3f;
+      background: #ffffff;
+      padding: 6px 12px;
+      border-radius: 40px;
+      font-weight: 500;
+    }
+    .gear-tally .gear-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .gear-tally .gear-item .gear-count {
+      font-weight: 700;
+    }
+    .gear-tally .divider {
+      opacity: 0.4;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 6px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 12px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #3a4d5e;
+      transition: all 0.15s;
+      cursor: pointer;
+      background: #f1f4f8;
+      flex: 0 0 auto;
+    }
+    .tab-btn.active {
+      background: #0b1b2b;
+      color: white;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .tab-btn:active { opacity: 0.7; }
+
+    .panel {
+      display: none;
+      animation: fade 0.2s ease;
+    }
+    .panel.active { display: block; }
+    @keyframes fade {
+      0% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin: 6px 0 14px 0;
+    }
+    .month-header h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #0b1b2b;
+    }
+    .month-total {
+      background: #eef2f6;
+      padding: 4px 16px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .month-total strong {
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .event-item {
+      background: #f8fafc;
+      border-radius: 18px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #e9edf2;
+      transition: 0.1s;
+    }
+    .event-item.next-upcoming {
+      background: #dafbe1;
+      border-color: #1b7c3c;
+      box-shadow: 0 2px 8px rgba(27, 124, 60, 0.15);
+    }
+    .event-item.next-upcoming .event-info .date-time {
+      color: #1a6e34;
+    }
+    .event-item.next-upcoming .event-info .rink-type-row .rink {
+      background: #b8e6c4;
+      color: #1a6e34;
+    }
+    .event-item.next-upcoming .event-info .rink-type-row .type-badge {
+      background: #b8e6c4;
+      color: #1a6e34;
+    }
+    .event-item.next-upcoming .event-info .rink-type-row .gear-badge {
+      background: #b8e6c4;
+      color: #1a6e34;
+    }
+    .event-item.editing {
+      background: #e8f0fe;
+      border-color: #0b1b2b;
+    }
+    .event-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+    .event-info .date-time {
+      font-weight: 600;
+      color: #0b1b2b;
+      font-size: 1rem;
+    }
+    .event-info .rink-type-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .event-info .rink-type-row .rink {
+      font-size: 0.9rem;
+      color: #3f5669;
+      background: #e9edf2;
+      padding: 2px 12px;
+      border-radius: 30px;
+      display: inline-block;
+    }
+    .event-info .rink-type-row .type-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      background: #e9edf2;
+      color: #3a4d5e;
+      padding: 2px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .event-info .rink-type-row .type-badge.game { background: #dbe4f0; color: #1b3a5c; }
+    .event-info .rink-type-row .type-badge.scrimmage { background: #f0e6d4; color: #7a5a2e; }
+    .event-info .rink-type-row .type-badge.wolfpac { background: #e0d4f0; color: #4a2e7a; }
+    .event-info .rink-type-row .gear-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      background: #ffe4d4;
+      color: #7a3a1a;
+      padding: 2px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .event-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .event-edit {
+      background: none;
+      border: none;
+      color: #4a5e71;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: 0.1s;
+      line-height: 1;
+    }
+    .event-edit:active { color: #0b1b2b; transform: scale(0.9); }
+    .event-delete {
+      background: none;
+      border: none;
+      color: #8a9aa8;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 0 6px;
+      transition: 0.1s;
+      line-height: 1;
+    }
+    .event-delete:active { color: #c00; transform: scale(0.9); }
+
+    .edit-form {
+      background: #f1f6fb;
+      border-radius: 18px;
+      padding: 14px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .edit-form .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      align-items: center;
+    }
+    .edit-form .form-row input,
+    .edit-form .form-row select {
+      flex: 1 0 100px;
+      background: white;
+      border: 1px solid #d6dfe8;
+      border-radius: 40px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      outline: none;
+      min-width: 80px;
+    }
+    .edit-form .form-row select {
+      appearance: auto;
+      cursor: pointer;
+      padding-right: 36px;
+    }
+    .edit-form .edit-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .edit-form .edit-actions button {
+      padding: 6px 16px;
+      border-radius: 40px;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.1s;
+      font-size: 0.85rem;
+    }
+    .edit-form .edit-actions .save-edit {
+      background: #0b1b2b;
+      color: white;
+    }
+    .edit-form .edit-actions .save-edit:active { opacity: 0.7; transform: scale(0.96); }
+    .edit-form .edit-actions .cancel-edit {
+      background: #e9edf2;
+      color: #3a4d5e;
+    }
+    .edit-form .edit-actions .cancel-edit:active { opacity: 0.7; transform: scale(0.96); }
+
+    .add-form {
+      background: #f1f6fb;
+      border-radius: 24px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      align-items: center;
+    }
+    .form-row input,
+    .form-row select {
+      flex: 1 0 120px;
+      background: white;
+      border: 1px solid #d6dfe8;
+      border-radius: 40px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: 0.1s;
+      min-width: 100px;
+    }
+    .form-row input:focus,
+    .form-row select:focus {
+      border-color: #0b1b2b;
+      box-shadow: 0 0 0 2px rgba(11, 27, 43, 0.1);
+    }
+    .form-row input::placeholder {
+      color: #9aabba;
+      font-weight: 400;
+    }
+    .form-row select {
+      appearance: auto;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235c7387' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .form-row select option {
+      padding: 4px 8px;
+    }
+    .add-btn {
+      background: #0b1b2b;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 40px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.15s;
+      flex: 0 0 auto;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      letter-spacing: 0.3px;
+    }
+    .add-btn:active { opacity: 0.7; transform: scale(0.96); }
+
+    .empty-message {
+      color: #6f8498;
+      text-align: center;
+      padding: 24px 0 12px;
+      font-size: 0.95rem;
+      background: #f8fafc;
+      border-radius: 30px;
+      border: 1px dashed #d6dfe8;
+    }
+
+    .text-small { font-size: 0.8rem; color: #5c7387; }
+
+    .rink-input-wrapper {
+      position: relative;
+      flex: 1 0 120px;
+      min-width: 100px;
+    }
+    .rink-input-wrapper input,
+    .rink-input-wrapper select {
+      width: 100%;
+    }
+    .rink-input-wrapper input {
+      display: none;
+    }
+    .rink-input-wrapper input.visible {
+      display: block;
+    }
+    .rink-input-wrapper select {
+      display: block;
+    }
+    .rink-input-wrapper select.hidden {
+      display: none;
+    }
+
+    /* Bottom sections */
+    .bottom-sections {
+      margin-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Google Sheets sync section */
+    .sync-section {
+      background: #eef7ee;
+      border-radius: 24px;
+      padding: 16px 14px;
+      border: 1px solid #c9e6c9;
+    }
+    .sync-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0b1b2b;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sync-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      align-items: center;
+    }
+    .sync-row input {
+      flex: 1 0 200px;
+      background: white;
+      border: 1px solid #d6dfe8;
+      border-radius: 40px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: 0.1s;
+    }
+    .sync-row input:focus {
+      border-color: #1b7c3c;
+      box-shadow: 0 0 0 2px rgba(27, 124, 60, 0.1);
+    }
+    .sync-btn {
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.15s;
+      flex: 0 0 auto;
+    }
+    .sync-btn:active { opacity: 0.7; transform: scale(0.96); }
+    .sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sync-btn.green { background: #1b7c3c; }
+    .sync-btn.blue { background: #1b5f7c; }
+    .sync-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .sync-status {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      background: #e9edf2;
+      color: #57606a;
+    }
+    .sync-status.success { background: #dafbe1; color: #1a6e34; }
+    .sync-status.error { background: #ffd7d7; color: #b33636; }
+    .sync-status.loading { background: #dde4ff; color: #2d4a9e; }
+
+    /* Import section */
+    .import-section {
+      background: #f1f6fb;
+      border-radius: 24px;
+      padding: 16px 14px;
+    }
+    .import-section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0b1b2b;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .import-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      align-items: center;
+    }
+    .import-row input {
+      flex: 1 0 200px;
+      background: white;
+      border: 1px solid #d6dfe8;
+      border-radius: 40px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: 0.1s;
+    }
+    .import-row input:focus {
+      border-color: #0b1b2b;
+      box-shadow: 0 0 0 2px rgba(11, 27, 43, 0.1);
+    }
+    .import-btn {
+      background: #1b7c3c;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.15s;
+      flex: 0 0 auto;
+    }
+    .import-btn:active { opacity: 0.7; transform: scale(0.96); }
+    .import-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .import-status {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      background: #e9edf2;
+      color: #57606a;
+    }
+    .import-status.success { background: #dafbe1; color: #1a6e34; }
+    .import-status.error { background: #ffd7d7; color: #b33636; }
+    .import-status.loading { background: #dde4ff; color: #2d4a9e; }
+
+    .debug-output {
+      background: #0b1b2b;
+      color: #e6edf3;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .debug-output .parsed-event { color: #7ee787; margin: 4px 0; }
+    .debug-output .debug-line { color: #8b949e; }
+    .debug-output .error-line { color: #f85149; }
+    .debug-output .summary-line { color: #d2a8ff; }
+
+    .toggle-debug-btn {
+      background: #eef2f6;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .toggle-debug-btn:active { opacity: 0.6; }
+
+    @media (max-width: 460px) {
+      .app { padding: 16px 12px; }
+      .form-row input,
+      .form-row select,
+      .rink-input-wrapper { flex: 1 0 100%; }
+      .add-btn { width: 100%; justify-content: center; }
+      .event-item { flex-wrap: wrap; }
+      .event-delete { margin-left: auto; }
+      .import-row input,
+      .sync-row input { flex: 1 0 100%; }
+      .import-btn,
+      .sync-btn { width: 100%; justify-content: center; }
+      .next-game { flex-direction: column; align-items: flex-start; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <h1>🏒 Games <small>tracker</small></h1>
+
+  <div class="next-game" id="nextGame">
+    <div>
+      <span class="label">⏰ Next Ice Time</span>
+    </div>
+    <div class="game-info" id="nextGameInfo">
+      <span class="empty">No games scheduled</span>
+    </div>
+  </div>
+
+  <div class="total-badge">
+    <div class="total-row">
+      <span class="label">🏆 all games</span>
+      <span class="count" id="grandTotal">0</span>
+    </div>
+    <div class="gear-tally" id="gearTally">
+      <span class="gear-item">TAN <span class="gear-count" id="gearTan">0</span></span>
+      <span class="divider">-</span>
+      <span class="gear-item">TACKS <span class="gear-count" id="gearTacks">0</span></span>
+      <span class="divider">-</span>
+      <span class="gear-item">WARRIOR <span class="gear-count" id="gearWarrior">0</span></span>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabsContainer"></div>
+  <div id="panelsContainer"></div>
+
+  <div class="bottom-sections">
+    <!-- Google Sheets Sync -->
+    <div class="sync-section" id="syncSection">
+      <h3>☁️ Google Sheets Sync</h3>
+      <div class="sync-row">
+        <input type="url" id="sheetsUrl" placeholder="Paste your Apps Script Web App URL..." />
+      </div>
+      <div class="sync-actions">
+        <button class="sync-btn green" id="saveUrlBtn">💾 Save URL</button>
+        <button class="sync-btn blue" id="pushBtn">⬆️ Push to Sheets</button>
+        <button class="sync-btn blue" id="pullBtn">⬇️ Pull from Sheets</button>
+      </div>
+      <div id="syncStatus" class="sync-status">Configure your Google Apps Script URL to enable sync</div>
+    </div>
+
+    <!-- Calendar Import -->
+    <div class="import-section" id="importSection">
+      <h3>📅 Import Calendar</h3>
+      <div class="import-row">
+        <input type="url" id="calendarUrl" placeholder="https://... or webcal://..." 
+               value="webcal://canlan2-api.sportninja.net/v1/calendar/GAFNqGN5d9OKsYdO/games/" />
+        <button class="import-btn" id="importCalendarBtn">⬇️ Import</button>
+      </div>
+      <div id="importStatus" class="import-status">Enter a calendar URL and click Import</div>
+      
+      <button class="toggle-debug-btn" id="toggleDebugBtn">🔍 Toggle Debug Output</button>
+      <div id="debugOutput" class="debug-output" style="display:none;">
+        <div class="debug-line">Debug output will appear here...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ----- DATA LAYER -----
+    const STORAGE_KEY = 'hockeyGamesTracker';
+    const SHEETS_URL_KEY = 'hockeySheetsUrl';
+
+    // DEFAULT Google Apps Script URL
+    const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwfAVvBqa_PlOmEcsYd1ZZugqJsdhuGufKBRlrdltfScopo-a6Ms3Z38-6CSLkx6386/exec';
+
+    function loadData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.events)) {
+            return parsed;
+          }
+        } catch (_) {}
+      }
+      return { events: [] };
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadSheetsUrl() {
+      // Use saved URL if present, otherwise fall back to the default
+      const saved = localStorage.getItem(SHEETS_URL_KEY);
+      if (saved && saved.trim()) return saved;
+      return DEFAULT_SHEETS_URL;
+    }
+
+    function saveSheetsUrl(url) {
+      localStorage.setItem(SHEETS_URL_KEY, url);
+    }
+
+    function generateId() {
+      return Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+    }
+
+    function getMonthKey(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length < 2) return '';
+      return parts[0] + '-' + parts[1].padStart(2, '0');
+    }
+
+    function formatMonthKey(monthKey) {
+      if (!monthKey) return '';
+      const [year, month] = monthKey.split('-');
+      const dateObj = new Date(parseInt(year), parseInt(month) - 1, 1);
+      return dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    function getOrdinalSuffix(day) {
+      if (day >= 11 && day <= 13) return 'th';
+      const lastDigit = day % 10;
+      switch (lastDigit) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    }
+
+    function formatDisplayDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length < 3) return dateStr;
+      const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      const dayName = dateObj.toLocaleString('en-US', { weekday: 'long' });
+      const day = dateObj.getDate();
+      const suffix = getOrdinalSuffix(day);
+      return `${dayName}, ${day}${suffix}`;
+    }
+
+    function formatDisplayTime(timeStr) {
+      if (!timeStr) return '';
+      const parts = timeStr.split(':');
+      if (parts.length < 2) return timeStr;
+      let hour = parseInt(parts[0]);
+      const minute = parts[1];
+      const ampm = hour >= 12 ? 'pm' : 'am';
+      hour = hour % 12;
+      if (hour === 0) hour = 12;
+      return `${hour}:${minute}${ampm}`;
+    }
+
+    // ----- RINKS -----
+    const RINKS = [
+      'North Van', 'Scotia', 'Richmond', 'Karen Magnussen', 'Trout Lake',
+      'Britannia', 'Hillcrest', 'Sunset', 'Killarney'
+    ];
+
+    // ----- TYPES -----
+    const TYPES = ['Game', 'Scrimmage', 'Wolfpac'];
+    const TYPE_COLORS = {
+      'Game': 'game',
+      'Scrimmage': 'scrimmage',
+      'Wolfpac': 'wolfpac'
+    };
+
+    // ----- GEAR -----
+    const GEARS = ['TAN', 'TACKS', 'WARRIOR'];
+    const DEFAULT_GEAR = 'TAN';
+
+    // ----- SEASON MONTHS -----
+    function getSeasonMonthKeys() {
+      const now = new Date();
+      let year = now.getFullYear();
+      const currentMonth = now.getMonth();
+      let startYear = year;
+      if (currentMonth < 8) {
+        startYear = year - 1;
+      }
+      const months = [];
+      for (let m = 8; m <= 11; m++) {
+        months.push(startYear + '-' + String(m + 1).padStart(2, '0'));
+      }
+      for (let m = 0; m <= 3; m++) {
+        months.push((startYear + 1) + '-' + String(m + 1).padStart(2, '0'));
+      }
+      return months;
+    }
+
+    // ----- RINK NAME SIMPLIFIER -----
+    function simplifyRinkName(fullName) {
+      if (!fullName) return 'Unknown Rink';
+      
+      const mappings = {
+        'scotia barn': 'Scotia', 'scotiabarn': 'Scotia', 'scotia': 'Scotia',
+        'north van': 'North Van', 'northvan': 'North Van',
+        'richmond': 'Richmond',
+        'karen magnussen': 'Karen Magnussen', 'karenmagnussen': 'Karen Magnussen',
+        'trout lake': 'Trout Lake', 'troutlake': 'Trout Lake',
+        'britannia': 'Britannia', 'hillcrest': 'Hillcrest',
+        'sunset': 'Sunset', 'killarney': 'Killarney'
+      };
+
+      const lower = fullName.toLowerCase();
+      
+      for (const [key, value] of Object.entries(mappings)) {
+        if (lower.includes(key)) {
+          return value;
+        }
+      }
+
+      const rinkMatch = fullName.match(/Rink\s*(\d+)/i);
+      if (rinkMatch) {
+        for (const [key, value] of Object.entries(mappings)) {
+          if (lower.includes(key)) {
+            return `${value}, Rink ${rinkMatch[1]}`;
+          }
+        }
+        return `Rink ${rinkMatch[1]}`;
+      }
+
+      const arenaMatch = fullName.match(/^([^,]+)/);
+      if (arenaMatch) {
+        const name = arenaMatch[1].trim();
+        for (const [key, value] of Object.entries(mappings)) {
+          if (name.toLowerCase().includes(key) || key.includes(name.toLowerCase())) {
+            return value;
+          }
+        }
+        return name;
+      }
+
+      return fullName;
+    }
+
+    // ----- RENDER -----
+    const tabsContainer = document.getElementById('tabsContainer');
+    const panelsContainer = document.getElementById('panelsContainer');
+    const grandTotalEl = document.getElementById('grandTotal');
+    const nextGameInfo = document.getElementById('nextGameInfo');
+    const gearTanEl = document.getElementById('gearTan');
+    const gearTacksEl = document.getElementById('gearTacks');
+    const gearWarriorEl = document.getElementById('gearWarrior');
+
+    let data = loadData();
+    const seasonMonths = getSeasonMonthKeys();
+    let activeMonthKey = seasonMonths[0] || null;
+    let editingId = null;
+
+    function getEventsForMonth(monthKey) {
+      return data.events.filter(ev => ev.monthKey === monthKey)
+        .sort((a, b) => (a.date + ' ' + a.time).localeCompare(b.date + ' ' + b.time));
+    }
+
+    function getAllEventsSorted() {
+      return data.events.slice().sort((a, b) => (a.date + ' ' + a.time).localeCompare(b.date + ' ' + b.time));
+    }
+
+    function getNextUpcomingId() {
+      const sorted = getAllEventsSorted();
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const currentTime = now.toTimeString().slice(0, 5);
+
+      for (const ev of sorted) {
+        if (ev.date > today || (ev.date === today && ev.time >= currentTime)) {
+          return ev.id;
+        }
+      }
+      return null;
+    }
+
+    function updateGrandTotal() {
+      grandTotalEl.textContent = data.events.length;
+    }
+
+    function updateGearTally() {
+      let tanCount = 0;
+      let tacksCount = 0;
+      let warriorCount = 0;
+
+      data.events.forEach(ev => {
+        const gear = (ev.gear || DEFAULT_GEAR).toUpperCase();
+        if (gear === 'TAN') tanCount++;
+        else if (gear === 'TACKS') tacksCount++;
+        else if (gear === 'WARRIOR') warriorCount++;
+      });
+
+      gearTanEl.textContent = tanCount;
+      gearTacksEl.textContent = tacksCount;
+      gearWarriorEl.textContent = warriorCount;
+    }
+
+    function updateNextGame() {
+      const sorted = getAllEventsSorted();
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const currentTime = now.toTimeString().slice(0, 5);
+
+      let nextGame = null;
+      for (const ev of sorted) {
+        if (ev.date > today || (ev.date === today && ev.time >= currentTime)) {
+          nextGame = ev;
+          break;
+        }
+      }
+
+      if (nextGame) {
+        const displayDate = formatDisplayDate(nextGame.date);
+        const displayTime = formatDisplayTime(nextGame.time);
+        nextGameInfo.innerHTML = `
+          <span>${displayDate} - ${displayTime}</span>
+          <span class="rink">${nextGame.rink}</span>
+          <span class="type-badge">${nextGame.type || 'Game'} · ${nextGame.gear || DEFAULT_GEAR}</span>
+        `;
+      } else {
+        nextGameInfo.innerHTML = `<span class="empty">No upcoming games</span>`;
+      }
+    }
+
+    function deleteEvent(id) {
+      data.events = data.events.filter(ev => ev.id !== id);
+      saveData(data);
+      editingId = null;
+      renderAll();
+    }
+
+    function addEvent(monthKey, date, time, rink, type = 'Game', gear = DEFAULT_GEAR) {
+      if (!date || !time || !rink.trim()) {
+        return false;
+      }
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(date)) {
+        return false;
+      }
+      const computedMonth = getMonthKey(date);
+      if (computedMonth !== monthKey) {
+        return false;
+      }
+      if (!seasonMonths.includes(monthKey)) {
+        return false;
+      }
+
+      const duplicate = data.events.some(ev => 
+        ev.date === date && ev.time === time && ev.rink === rink.trim()
+      );
+      if (duplicate) {
+        return false;
+      }
+
+      const newEvent = {
+        id: generateId(),
+        monthKey: monthKey,
+        date: date,
+        time: time,
+        rink: rink.trim(),
+        type: type || 'Game',
+        gear: gear || DEFAULT_GEAR
+      };
+      data.events.push(newEvent);
+      saveData(data);
+      return true;
+    }
+
+    function updateEvent(id, date, time, rink, type, gear) {
+      const event = data.events.find(ev => ev.id === id);
+      if (!event) return false;
+
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(date)) return false;
+
+      const computedMonth = getMonthKey(date);
+      if (!seasonMonths.includes(computedMonth)) return false;
+
+      const duplicate = data.events.some(ev => 
+        ev.id !== id && ev.date === date && ev.time === time && ev.rink === rink.trim()
+      );
+      if (duplicate) return false;
+
+      event.date = date;
+      event.time = time;
+      event.rink = rink.trim();
+      event.monthKey = computedMonth;
+      event.type = type || 'Game';
+      event.gear = gear || DEFAULT_GEAR;
+      saveData(data);
+      return true;
+    }
+
+    function renderAll() {
+      if (!seasonMonths.includes(activeMonthKey) && seasonMonths.length > 0) {
+        activeMonthKey = seasonMonths[0];
+      }
+
+      const nextUpcomingId = getNextUpcomingId();
+
+      tabsContainer.innerHTML = '';
+      seasonMonths.forEach((mk) => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn' + (mk === activeMonthKey ? ' active' : '');
+        btn.textContent = formatMonthKey(mk);
+        btn.dataset.monthKey = mk;
+        btn.addEventListener('click', () => {
+          activeMonthKey = mk;
+          editingId = null;
+          renderAll();
+        });
+        tabsContainer.appendChild(btn);
+      });
+
+      panelsContainer.innerHTML = '';
+      seasonMonths.forEach((mk) => {
+        const panel = document.createElement('div');
+        panel.className = 'panel' + (mk === activeMonthKey ? ' active' : '');
+        panel.dataset.monthKey = mk;
+
+        const events = getEventsForMonth(mk);
+        const total = events.length;
+
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.innerHTML = `
+          <h3>${formatMonthKey(mk)}</h3>
+          <div class="month-total">games <strong>${total}</strong></div>
+        `;
+
+        const list = document.createElement('div');
+        list.className = 'event-list';
+        if (events.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'empty-message';
+          empty.textContent = 'No games scheduled yet';
+          list.appendChild(empty);
+        } else {
+          events.forEach(ev => {
+            const isEditing = editingId === ev.id;
+            const isNextUpcoming = ev.id === nextUpcomingId && !isEditing;
+            const displayDate = formatDisplayDate(ev.date);
+            const displayTime = formatDisplayTime(ev.time);
+            const typeClass = TYPE_COLORS[ev.type] || '';
+            const gear = ev.gear || DEFAULT_GEAR;
+            
+            const item = document.createElement('div');
+            item.className = 'event-item' + (isEditing ? ' editing' : '') + (isNextUpcoming ? ' next-upcoming' : '');
+            
+            if (isEditing) {
+              item.innerHTML = `
+                <div class="event-info">
+                  <div class="date-time">${displayDate} - ${displayTime}</div>
+                  <div class="rink-type-row">
+                    <span class="rink">${ev.rink}</span>
+                    <span class="type-badge ${typeClass}">${ev.type || 'Game'}</span>
+                    <span class="gear-badge">${gear}</span>
+                  </div>
+                </div>
+                <div class="event-actions">
+                  <button class="event-edit" data-id="${ev.id}" title="Edit">✎</button>
+                  <button class="event-delete" data-id="${ev.id}" title="Delete">✕</button>
+                </div>
+              `;
+              const editBtn = item.querySelector('.event-edit');
+              editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                editingId = ev.id;
+                renderAll();
+              });
+              const delBtn = item.querySelector('.event-delete');
+              delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm('Delete this game?')) {
+                  deleteEvent(ev.id);
+                  syncDeleteToSheets(ev.id);
+                }
+              });
+              list.appendChild(item);
+
+              const editForm = createEditForm(ev);
+              list.appendChild(editForm);
+            } else {
+              item.innerHTML = `
+                <div class="event-info">
+                  <div class="date-time">${displayDate} - ${displayTime}</div>
+                  <div class="rink-type-row">
+                    <span class="rink">${ev.rink}</span>
+                    <span class="type-badge ${typeClass}">${ev.type || 'Game'}</span>
+                    <span class="gear-badge">${gear}</span>
+                  </div>
+                </div>
+                <div class="event-actions">
+                  <button class="event-edit" data-id="${ev.id}" title="Edit">✎</button>
+                  <button class="event-delete" data-id="${ev.id}" title="Delete">✕</button>
+                </div>
+              `;
+              const editBtn = item.querySelector('.event-edit');
+              editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                editingId = ev.id;
+                renderAll();
+              });
+              const delBtn = item.querySelector('.event-delete');
+              delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm('Delete this game?')) {
+                  deleteEvent(ev.id);
+                  syncDeleteToSheets(ev.id);
+                }
+              });
+              list.appendChild(item);
+            }
+          });
+        }
+
+        const form = createAddForm(mk);
+        panel.appendChild(header);
+        panel.appendChild(list);
+        panel.appendChild(form);
+        panelsContainer.appendChild(panel);
+      });
+
+      updateGrandTotal();
+      updateGearTally();
+      updateNextGame();
+    }
+
+    function createEditForm(event) {
+      const formDiv = document.createElement('div');
+      formDiv.className = 'edit-form';
+
+      const [year, month] = event.monthKey.split('-').map(Number);
+      const firstDayDate = new Date(year, month - 1, 1);
+      const lastDayDate = new Date(year, month, 0);
+      const minDate = firstDayDate.toISOString().split('T')[0];
+      const maxDate = lastDayDate.toISOString().split('T')[0];
+
+      let rinkOptions = '';
+      RINKS.forEach(rink => {
+        const selected = rink === event.rink ? ' selected' : '';
+        rinkOptions += `<option value="${rink}"${selected}>${rink}</option>`;
+      });
+      rinkOptions += `<option value="__custom__">✏️ Custom...</option>`;
+
+      let typeOptions = '';
+      TYPES.forEach(type => {
+        const selected = type === event.type ? ' selected' : '';
+        typeOptions += `<option value="${type}"${selected}>${type}</option>`;
+      });
+
+      const eventGear = event.gear || DEFAULT_GEAR;
+      let gearOptions = '';
+      GEARS.forEach(gear => {
+        const selected = gear === eventGear ? ' selected' : '';
+        gearOptions += `<option value="${gear}"${selected}>${gear}</option>`;
+      });
+
+      formDiv.innerHTML = `
+        <div class="form-row">
+          <input type="date" id="editDate_${event.id}" value="${event.date}" min="${minDate}" max="${maxDate}" class="edit-date">
+          <input type="time" id="editTime_${event.id}" value="${event.time}" class="edit-time">
+          <select id="editType_${event.id}" class="edit-type">
+            ${typeOptions}
+          </select>
+          <select id="editGear_${event.id}" class="edit-gear">
+            ${gearOptions}
+          </select>
+          <div class="rink-input-wrapper">
+            <select id="editRinkSelect_${event.id}" class="edit-rink-select">
+              ${rinkOptions}
+            </select>
+            <input type="text" id="editRinkCustom_${event.id}" class="edit-rink-custom" placeholder="Enter custom rink name..." style="display:none;" />
+          </div>
+        </div>
+        <div class="edit-actions">
+          <button class="cancel-edit" data-id="${event.id}">Cancel</button>
+          <button class="save-edit" data-id="${event.id}">💾 Save</button>
+        </div>
+      `;
+
+      const saveBtn = formDiv.querySelector('.save-edit');
+      const cancelBtn = formDiv.querySelector('.cancel-edit');
+      const dateInput = formDiv.querySelector('.edit-date');
+      const timeInput = formDiv.querySelector('.edit-time');
+      const typeSelect = formDiv.querySelector('.edit-type');
+      const gearSelect = formDiv.querySelector('.edit-gear');
+      const rinkSelect = formDiv.querySelector('.edit-rink-select');
+      const rinkCustom = formDiv.querySelector('.edit-rink-custom');
+
+      if (!RINKS.includes(event.rink)) {
+        rinkSelect.value = '__custom__';
+        rinkSelect.style.display = 'none';
+        rinkCustom.style.display = 'block';
+        rinkCustom.value = event.rink;
+      }
+
+      rinkSelect.addEventListener('change', () => {
+        if (rinkSelect.value === '__custom__') {
+          rinkSelect.style.display = 'none';
+          rinkCustom.style.display = 'block';
+          rinkCustom.value = '';
+          rinkCustom.focus();
+        } else {
+          rinkSelect.style.display = 'block';
+          rinkCustom.style.display = 'none';
+        }
+      });
+
+      rinkCustom.addEventListener('blur', () => {
+        if (!rinkCustom.value.trim()) {
+          rinkCustom.style.display = 'none';
+          rinkSelect.style.display = 'block';
+          rinkSelect.value = event.rink;
+        }
+      });
+
+      saveBtn.addEventListener('click', () => {
+        const dateVal = dateInput.value;
+        const timeVal = timeInput.value;
+        const typeVal = typeSelect.value;
+        const gearVal = gearSelect.value;
+        
+        let rinkVal = '';
+        if (rinkSelect.style.display !== 'none' && rinkSelect.value && rinkSelect.value !== '__custom__') {
+          rinkVal = rinkSelect.value;
+        } else if (rinkCustom.style.display !== 'none' && rinkCustom.value.trim()) {
+          rinkVal = rinkCustom.value.trim();
+        }
+
+        if (!dateVal || !timeVal || !rinkVal) {
+          alert('Please fill in all fields.');
+          return;
+        }
+
+        const computedMonth = getMonthKey(dateVal);
+        if (!seasonMonths.includes(computedMonth)) {
+          alert('Date must be in the season (Sep–Apr).');
+          return;
+        }
+
+        if (updateEvent(event.id, dateVal, timeVal, rinkVal, typeVal, gearVal)) {
+          const updated = data.events.find(e => e.id === event.id);
+          syncUpdateToSheets(updated);
+          editingId = null;
+          renderAll();
+        } else {
+          alert('Duplicate event or invalid data.');
+        }
+      });
+
+      cancelBtn.addEventListener('click', () => {
+        editingId = null;
+        renderAll();
+      });
+
+      [dateInput, timeInput, typeSelect, gearSelect, rinkSelect, rinkCustom].forEach(el => {
+        if (el) {
+          el.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              saveBtn.click();
+            }
+          });
+        }
+      });
+
+      return formDiv;
+    }
+
+    function createAddForm(monthKey) {
+      const formDiv = document.createElement('div');
+      formDiv.className = 'add-form';
+
+      const [year, month] = monthKey.split('-').map(Number);
+      const firstDay = new Date(year, month - 1, 1);
+      const defaultDate = firstDay.toISOString().split('T')[0];
+
+      let rinkOptions = '';
+      RINKS.forEach(rink => {
+        rinkOptions += `<option value="${rink}">${rink}</option>`;
+      });
+      rinkOptions += `<option value="__custom__">✏️ Custom...</option>`;
+
+      let typeOptions = '';
+      TYPES.forEach(type => {
+        typeOptions += `<option value="${type}">${type}</option>`;
+      });
+
+      let gearOptions = '';
+      GEARS.forEach(gear => {
+        const selected = gear === DEFAULT_GEAR ? ' selected' : '';
+        gearOptions += `<option value="${gear}"${selected}>${gear}</option>`;
+      });
+
+      formDiv.innerHTML = `
+        <div class="form-row">
+          <input type="date" id="dateInput_${monthKey}" value="${defaultDate}" class="date-input">
+          <input type="time" id="timeInput_${monthKey}" value="19:00" class="time-input">
+          <select id="typeSelect_${monthKey}" class="type-select">
+            ${typeOptions}
+          </select>
+          <select id="gearSelect_${monthKey}" class="gear-select">
+            ${gearOptions}
+          </select>
+          <div class="rink-input-wrapper">
+            <select id="rinkSelect_${monthKey}" class="rink-select">
+              <option value="">Select a rink...</option>
+              ${rinkOptions}
+            </select>
+            <input type="text" id="rinkCustom_${monthKey}" class="rink-custom" placeholder="Enter custom rink name..." style="display:none;" />
+          </div>
+          <button class="add-btn" data-month="${monthKey}">+ Add game</button>
+        </div>
+        <div class="text-small">Date must be within ${monthKey}</div>
+      `;
+
+      const addBtn = formDiv.querySelector('.add-btn');
+      const dateInput = formDiv.querySelector('.date-input');
+      const timeInput = formDiv.querySelector('.time-input');
+      const typeSelect = formDiv.querySelector('.type-select');
+      const gearSelect = formDiv.querySelector('.gear-select');
+      const rinkSelect = formDiv.querySelector('.rink-select');
+      const rinkCustom = formDiv.querySelector('.rink-custom');
+
+      rinkSelect.addEventListener('change', () => {
+        if (rinkSelect.value === '__custom__') {
+          rinkSelect.style.display = 'none';
+          rinkCustom.style.display = 'block';
+          rinkCustom.value = '';
+          rinkCustom.focus();
+        } else {
+          rinkSelect.style.display = 'block';
+          rinkCustom.style.display = 'none';
+        }
+      });
+
+      rinkCustom.addEventListener('blur', () => {
+        if (!rinkCustom.value.trim()) {
+          rinkCustom.style.display = 'none';
+          rinkSelect.style.display = 'block';
+          rinkSelect.value = '';
+        }
+      });
+
+      rinkCustom.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          addBtn.click();
+        }
+      });
+
+      const firstDayDate = new Date(year, month - 1, 1);
+      const lastDayDate = new Date(year, month, 0);
+      const minDate = firstDayDate.toISOString().split('T')[0];
+      const maxDate = lastDayDate.toISOString().split('T')[0];
+      dateInput.setAttribute('min', minDate);
+      dateInput.setAttribute('max', maxDate);
+      if (dateInput.value < minDate || dateInput.value > maxDate) {
+        dateInput.value = minDate;
+      }
+
+      addBtn.addEventListener('click', () => {
+        const dateVal = dateInput.value;
+        const timeVal = timeInput.value;
+        const typeVal = typeSelect.value;
+        const gearVal = gearSelect.value;
+        
+        let rinkVal = '';
+        if (rinkSelect.style.display !== 'none' && rinkSelect.value && rinkSelect.value !== '__custom__') {
+          rinkVal = rinkSelect.value;
+        } else if (rinkCustom.style.display !== 'none' && rinkCustom.value.trim()) {
+          rinkVal = rinkCustom.value.trim();
+        }
+
+        if (!dateVal || !timeVal || !rinkVal) {
+          alert('Please fill in all fields.');
+          return;
+        }
+
+        const computed = getMonthKey(dateVal);
+        if (computed !== monthKey) {
+          alert(`Date must be within ${formatMonthKey(monthKey)} (${monthKey})`);
+          return;
+        }
+        if (!seasonMonths.includes(computed)) {
+          alert('Date must be in the season (Sep–Apr).');
+          return;
+        }
+
+        const success = addEvent(monthKey, dateVal, timeVal, rinkVal, typeVal, gearVal);
+        if (success) {
+          const added = data.events[data.events.length - 1];
+          syncAddToSheets(added);
+
+          rinkSelect.style.display = 'block';
+          rinkSelect.value = '';
+          rinkCustom.style.display = 'none';
+          rinkCustom.value = '';
+
+          const todayStr = new Date().toISOString().split('T')[0];
+          if (todayStr >= minDate && todayStr <= maxDate) {
+            dateInput.value = todayStr;
+          } else {
+            dateInput.value = minDate;
+          }
+          timeInput.value = '19:00';
+          gearSelect.value = DEFAULT_GEAR;
+          renderAll();
+        } else {
+          alert('Duplicate event or invalid data.');
+        }
+      });
+
+      [dateInput, timeInput, typeSelect, gearSelect, rinkSelect].forEach(el => {
+        if (el) {
+          el.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              addBtn.click();
+            }
+          });
+        }
+      });
+
+      return formDiv;
+    }
+
+    // ----- GOOGLE SHEETS SYNC -----
+    const sheetsUrlInput = document.getElementById('sheetsUrl');
+    const saveUrlBtn = document.getElementById('saveUrlBtn');
+    const pushBtn = document.getElementById('pushBtn');
+    const pullBtn = document.getElementById('pullBtn');
+    const syncStatus = document.getElementById('syncStatus');
+
+    // Initialize URL field: saved URL or default
+    sheetsUrlInput.value = loadSheetsUrl();
+
+    function setSyncStatus(msg, type = '') {
+      syncStatus.textContent = msg;
+      syncStatus.className = 'sync-status' + (type ? ' ' + type : '');
+    }
+
+    function getSheetsUrl() {
+      return loadSheetsUrl();
+    }
+
+    saveUrlBtn.addEventListener('click', () => {
+      const url = sheetsUrlInput.value.trim();
+      if (!url) {
+        // Empty means revert to default
+        localStorage.removeItem(SHEETS_URL_KEY);
+        sheetsUrlInput.value = DEFAULT_SHEETS_URL;
+        setSyncStatus('✅ Reverted to default URL', 'success');
+        return;
+      }
+      if (!url.startsWith('https://script.google.com/')) {
+        if (!confirm('That doesn\'t look like a Google Apps Script URL. Save anyway?')) return;
+      }
+      saveSheetsUrl(url);
+      setSyncStatus('✅ URL saved! You can now push/pull.', 'success');
+    });
+
+    async function sheetsRequest(method, body) {
+      const url = getSheetsUrl();
+      if (!url) throw new Error('No Google Sheets URL configured');
+
+      if (method === 'GET') {
+        const resp = await fetch(url + '?action=getAll');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return await resp.json();
+      } else {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(body)
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return await resp.json();
+      }
+    }
+
+    // Silently add to sheets (non-blocking, doesn't alert on failure)
+    function syncAddToSheets(event) {
+      if (!getSheetsUrl()) return;
+      sheetsRequest('POST', { action: 'add', event })
+        .then(() => setSyncStatus('✅ Synced to Sheets', 'success'))
+        .catch(err => setSyncStatus('⚠️ Sheet sync failed: ' + err.message, 'error'));
+    }
+
+    function syncUpdateToSheets(event) {
+      if (!getSheetsUrl() || !event) return;
+      sheetsRequest('POST', { action: 'update', event })
+        .then(() => setSyncStatus('✅ Synced to Sheets', 'success'))
+        .catch(err => setSyncStatus('⚠️ Sheet sync failed: ' + err.message, 'error'));
+    }
+
+    function syncDeleteToSheets(id) {
+      if (!getSheetsUrl()) return;
+      sheetsRequest('POST', { action: 'delete', id })
+        .then(() => setSyncStatus('✅ Synced to Sheets', 'success'))
+        .catch(err => setSyncStatus('⚠️ Sheet sync failed: ' + err.message, 'error'));
+    }
+
+    // Push everything (add each event to sheet)
+    pushBtn.addEventListener('click', async () => {
+      if (!getSheetsUrl()) {
+        setSyncStatus('⚠️ Please save a URL first', 'error');
+        return;
+      }
+      if (data.events.length === 0) {
+        setSyncStatus('⚠️ No events to push', 'error');
+        return;
+      }
+      if (!confirm(`Push ${data.events.length} events to Google Sheets? This will add them to the sheet.`)) return;
+
+      setSyncStatus('⏳ Pushing events...', 'loading');
+      pushBtn.disabled = true;
+
+      try {
+        let added = 0;
+        let failed = 0;
+        for (const ev of data.events) {
+          try {
+            const result = await sheetsRequest('POST', { action: 'add', event: ev });
+            if (result && result.success) added++;
+            else failed++;
+          } catch (e) {
+            failed++;
+          }
+        }
+        if (failed === 0) {
+          setSyncStatus(`✅ Pushed ${added} events to Google Sheets`, 'success');
+        } else {
+          setSyncStatus(`⚠️ Pushed ${added}, ${failed} failed`, 'error');
+        }
+      } catch (err) {
+        setSyncStatus(`❌ Push failed: ${err.message}`, 'error');
+      } finally {
+        pushBtn.disabled = false;
+      }
+    });
+
+    // Pull everything (replace local data)
+    pullBtn.addEventListener('click', async () => {
+      if (!getSheetsUrl()) {
+        setSyncStatus('⚠️ Please save a URL first', 'error');
+        return;
+      }
+      if (data.events.length > 0) {
+        if (!confirm('This will REPLACE all local data with the data from Google Sheets. Continue?')) return;
+      }
+
+      setSyncStatus('⏳ Pulling events...', 'loading');
+      pullBtn.disabled = true;
+
+      try {
+        const result = await sheetsRequest('GET');
+        if (!result || !Array.isArray(result.events)) {
+          throw new Error('Invalid response from Google Sheets');
+        }
+
+        data.events = result.events.map(ev => ({
+          id: String(ev.id),
+          monthKey: getMonthKey(ev.date),
+          date: ev.date,
+          time: ev.time,
+          rink: ev.rink,
+          type: ev.type || 'Game',
+          gear: ev.gear || DEFAULT_GEAR
+        }));
+
+        saveData(data);
+        editingId = null;
+        renderAll();
+        setSyncStatus(`✅ Pulled ${data.events.length} events from Google Sheets`, 'success');
+      } catch (err) {
+        setSyncStatus(`❌ Pull failed: ${err.message}`, 'error');
+      } finally {
+        pullBtn.disabled = false;
+      }
+    });
+
+    // ----- CALENDAR IMPORT -----
+    const debugOutput = document.getElementById('debugOutput');
+    let debugVisible = false;
+
+    document.getElementById('toggleDebugBtn').addEventListener('click', () => {
+      debugVisible = !debugVisible;
+      debugOutput.style.display = debugVisible ? 'block' : 'none';
+    });
+
+    function debugLog(msg, type = 'debug-line') {
+      const div = document.createElement('div');
+      div.className = type;
+      div.textContent = msg;
+      debugOutput.appendChild(div);
+      debugOutput.scrollTop = debugOutput.scrollHeight;
+    }
+
+    function clearDebug() {
+      debugOutput.innerHTML = '';
+    }
+
+    function parseICalendarWithDebug(icalData) {
+      clearDebug();
+      debugLog('📋 Starting iCalendar parsing...', 'summary-line');
+      debugLog(`📄 Total data length: ${icalData.length} characters`, 'debug-line');
+      
+      const events = [];
+      const lines = icalData.split(/\r?\n/);
+      debugLog(`📄 Found ${lines.length} lines`, 'debug-line');
+      
+      let inEvent = false;
+      let summary = '';
+      let location = '';
+      let dtstart = '';
+      let eventCount = 0;
+
+      const userOffsetMinutes = new Date().getTimezoneOffset();
+      debugLog(`🕐 User timezone offset: ${-userOffsetMinutes} minutes (${-userOffsetMinutes/60} hours)`, 'summary-line');
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        
+        while (i + 1 < lines.length && (lines[i + 1].startsWith(' ') || lines[i + 1].startsWith('\t'))) {
+          line += lines[i + 1].trim();
+          i++;
+        }
+
+        if (line === 'BEGIN:VEVENT') {
+          inEvent = true;
+          eventCount++;
+          summary = '';
+          location = '';
+          dtstart = '';
+          debugLog(`🔹 Event #${eventCount} started at line ${i+1}`, 'summary-line');
+        } else if (line === 'END:VEVENT') {
+          if (inEvent && dtstart) {
+            debugLog(`  📝 Processing event #${eventCount}...`, 'debug-line');
+            debugLog(`  📝 DTSTART raw: ${dtstart}`, 'debug-line');
+            debugLog(`  📝 SUMMARY raw: ${summary || '(empty)'}`, 'debug-line');
+            debugLog(`  📝 LOCATION raw: ${location || '(empty)'}`, 'debug-line');
+            
+            let dateStr = dtstart.replace(/^DTSTART[^:]*:/, '').trim();
+            let timeStr = '';
+            
+            debugLog(`  📝 Cleaned DTSTART: ${dateStr}`, 'debug-line');
+            
+            try {
+              let dateObj = null;
+              
+              if (dateStr.endsWith('Z')) {
+                dateStr = dateStr.replace('Z', '');
+                debugLog(`  📝 Detected UTC time (ends with Z)`, 'debug-line');
+                
+                const match = dateStr.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+                if (match) {
+                  dateObj = new Date(Date.UTC(
+                    parseInt(match[1]),
+                    parseInt(match[2]) - 1,
+                    parseInt(match[3]),
+                    parseInt(match[4]),
+                    parseInt(match[5]),
+                    parseInt(match[6])
+                  ));
+                  debugLog(`  📝 Created UTC date: ${dateObj.toISOString()}`, 'debug-line');
+                }
+              } else {
+                let match = dateStr.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+                if (match) {
+                  dateObj = new Date(
+                    parseInt(match[1]),
+                    parseInt(match[2]) - 1,
+                    parseInt(match[3]),
+                    parseInt(match[4]),
+                    parseInt(match[5]),
+                    parseInt(match[6])
+                  );
+                  debugLog(`  📝 Created local date: ${dateObj.toISOString()}`, 'debug-line');
+                } else {
+                  match = dateStr.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/);
+                  if (match) {
+                    dateObj = new Date(
+                      parseInt(match[1]),
+                      parseInt(match[2]) - 1,
+                      parseInt(match[3]),
+                      parseInt(match[4]),
+                      parseInt(match[5])
+                    );
+                    debugLog(`  📝 Created local date (no seconds): ${dateObj.toISOString()}`, 'debug-line');
+                  }
+                }
+              }
+              
+              if (dateObj && !isNaN(dateObj.getTime())) {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const hours = String(dateObj.getHours()).padStart(2, '0');
+                const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                
+                dateStr = `${year}-${month}-${day}`;
+                timeStr = `${hours}:${minutes}`;
+                
+                debugLog(`  ✅ Converted to local time: ${dateStr} ${timeStr}`, 'parsed-event');
+                debugLog(`  📝 UTC equivalent: ${dateObj.toISOString()}`, 'debug-line');
+              } else {
+                debugLog(`  ⚠️ Failed to parse date object: ${dateStr}`, 'error-line');
+              }
+            } catch (e) {
+              debugLog(`  ❌ Error parsing date: ${e.message}`, 'error-line');
+            }
+
+            if (dateStr && timeStr) {
+              let rink = location || summary || 'Unknown Rink';
+              rink = rink.replace(/^LOCATION[^:]*:/, '').trim();
+              rink = rink.replace(/\\,/g, ',').replace(/\\n/g, ' ').trim();
+              
+              if (!rink || rink === 'Unknown Rink') {
+                rink = summary || 'Unknown Rink';
+              }
+
+              const simplifiedRink = simplifyRinkName(rink);
+              debugLog(`  📝 Simplified rink: "${rink}" → "${simplifiedRink}"`, 'debug-line');
+
+              let type = 'Wolfpac';
+              if (summary) {
+                const lowerSummary = summary.toLowerCase();
+                if (lowerSummary.includes('scrimmage')) {
+                  type = 'Scrimmage';
+                } else if (lowerSummary.includes('game')) {
+                  type = 'Game';
+                }
+              }
+              debugLog(`  📝 Type: ${type}`, 'debug-line');
+
+              const eventData = {
+                date: dateStr,
+                time: timeStr,
+                rink: simplifiedRink,
+                type: type,
+                gear: DEFAULT_GEAR
+              };
+              
+              debugLog(`  ✅ Final parsed: ${eventData.date} ${eventData.time} @ ${eventData.rink} (${eventData.type}) gear:${eventData.gear}`, 'parsed-event');
+              events.push(eventData);
+            } else {
+              debugLog(`  ❌ Failed to parse date/time for event #${eventCount}`, 'error-line');
+            }
+          } else {
+            debugLog(`  ⚠️ Event #${eventCount} has no DTSTART`, 'error-line');
+          }
+          inEvent = false;
+        } else if (inEvent) {
+          if (line.startsWith('SUMMARY')) {
+            summary = line.replace(/^SUMMARY[^:]*:/, '').trim();
+            summary = summary.replace(/\\,/g, ',').replace(/\\n/g, ' ').trim();
+            debugLog(`  📝 SUMMARY: ${summary}`, 'debug-line');
+          } else if (line.startsWith('LOCATION')) {
+            location = line.replace(/^LOCATION[^:]*:/, '').trim();
+            location = location.replace(/\\,/g, ',').replace(/\\n/g, ' ').trim();
+            debugLog(`  📝 LOCATION: ${location}`, 'debug-line');
+          } else if (line.startsWith('DTSTART')) {
+            dtstart = line;
+          }
+        }
+      }
+
+      debugLog(`\n📊 Total events parsed: ${events.length}`, 'summary-line');
+      return events;
+    }
+
+    // ----- CALENDAR IMPORT -----
+    const importBtn = document.getElementById('importCalendarBtn');
+    const calendarUrlInput = document.getElementById('calendarUrl');
+    const importStatus = document.getElementById('importStatus');
+
+    function setStatus(msg, type = '') {
+      importStatus.textContent = msg;
+      importStatus.className = 'import-status' + (type ? ' ' + type : '');
+    }
+
+    async function importCalendar() {
+      let url = calendarUrlInput.value.trim();
+      if (!url) {
+        setStatus('⚠️ Please enter a calendar URL', 'error');
+        return;
+      }
+
+      if (url.startsWith('webcal://')) {
+        url = url.replace('webcal://', 'https://');
+        debugLog(`🔗 Converted webcal to https: ${url}`, 'debug-line');
+      }
+
+      setStatus('⏳ Fetching calendar...', 'loading');
+      importBtn.disabled = true;
+      clearDebug();
+      debugVisible = true;
+      debugOutput.style.display = 'block';
+      debugLog(`🔗 Fetching: ${url}`, 'summary-line');
+
+      try {
+        const response = await fetch(url, {
+          mode: 'cors',
+          headers: {
+            'Accept': 'text/calendar, text/plain, */*'
+          }
+        });
+
+        debugLog(`📡 Response status: ${response.status} ${response.statusText}`, 'debug-line');
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const text = await response.text();
+        debugLog(`📄 Response length: ${text.length} characters`, 'debug-line');
+        debugLog(`📄 First 500 chars:\n${text.substring(0, 500)}`, 'debug-line');
+        
+        if (!text.includes('BEGIN:VCALENDAR') && !text.includes('BEGIN:VEVENT')) {
+          throw new Error('The URL does not appear to be a valid calendar feed');
+        }
+
+        const parsedEvents = parseICalendarWithDebug(text);
+        
+        if (parsedEvents.length === 0) {
+          setStatus('⚠️ No events found in the calendar', 'error');
+          debugLog('⚠️ No events were parsed', 'error-line');
+          return;
+        }
+
+        debugLog(`\n📋 Found ${parsedEvents.length} total events in calendar`, 'summary-line');
+        
+        let addedCount = 0;
+        let skippedCount = 0;
+        let outsideSeason = 0;
+
+        for (const ev of parsedEvents) {
+          const monthKey = getMonthKey(ev.date);
+          if (seasonMonths.includes(monthKey)) {
+            const success = addEvent(monthKey, ev.date, ev.time, ev.rink, ev.type, ev.gear);
+            if (success) {
+              addedCount++;
+              const added = data.events[data.events.length - 1];
+              syncAddToSheets(added);
+              debugLog(`✅ Added: ${ev.date} ${ev.time} @ ${ev.rink} (${ev.type}) gear:${ev.gear}`, 'parsed-event');
+            } else {
+              skippedCount++;
+              debugLog(`⏭️ Skipped (duplicate): ${ev.date} ${ev.time} @ ${ev.rink}`, 'debug-line');
+            }
+          } else {
+            outsideSeason++;
+            debugLog(`⏭️ Outside season: ${ev.date} (${monthKey})`, 'debug-line');
+          }
+        }
+
+        renderAll();
+
+        let msg = `✅ Imported ${addedCount} games`;
+        if (skippedCount > 0) {
+          msg += ` (${skippedCount} duplicates skipped)`;
+        }
+        if (outsideSeason > 0) {
+          msg += ` (${outsideSeason} outside season)`;
+        }
+        setStatus(msg, 'success');
+        debugLog(`\n📊 Final stats: Added ${addedCount}, Duplicates ${skippedCount}, Outside season ${outsideSeason}`, 'summary-line');
+
+      } catch (error) {
+        setStatus(`❌ Import failed: ${error.message}`, 'error');
+        debugLog(`❌ Error: ${error.message}`, 'error-line');
+        console.error('Import error:', error);
+      } finally {
+        importBtn.disabled = false;
+      }
+    }
+
+    importBtn.addEventListener('click', importCalendar);
+
+    calendarUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        importCalendar();
+      }
+    });
+
+    // ----- INIT -----
+    renderAll();
+
+    // Show sync status based on whether we have a saved URL or are using the default
+    const savedUrl = localStorage.getItem(SHEETS_URL_KEY);
+    if (savedUrl && savedUrl.trim()) {
+      setSyncStatus('ℹ️ Custom Sheets URL configured. Use Push/Pull to sync.', '');
+    } else {
+      setSyncStatus('ℹ️ Using default Sheets URL. Ready to Push/Pull.', '');
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY) {
+        data = loadData();
+        renderAll();
+      }
+    });
+
+  })();
+</script>
+</body>
+</html>
