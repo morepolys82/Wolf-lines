@@ -419,6 +419,16 @@
             border-radius: 30px;
             font-size: 0.7rem;
         }
+        .player-counts {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .attending-count {
+            background: #1a6b3c;
+        }
         .attendance-legend {
             display: flex;
             gap: 0.6rem;
@@ -895,7 +905,10 @@
             <div class="player-pool">
                 <h2>
                     <span>📋 Players</span>
-                    <span class="pool-count" id="poolCount">0</span>
+                    <span class="player-counts">
+                        <span class="pool-count attending-count" id="attendingCount" aria-live="polite" title="Attending skaters, excluding goalies">0 attending</span>
+                        <span class="pool-count" id="poolCount">0</span>
+                    </span>
                 </h2>
                 <div class="player-list-scroll-wrapper">
                     <div id="playerList" class="player-list">
@@ -1016,6 +1029,7 @@
         const copyBtn = document.getElementById('copyBtn');
         const autoBtn = document.getElementById('autoBtn');
         const poolCountEl = document.getElementById('poolCount');
+        const attendingCountEl = document.getElementById('attendingCount');
         const toastEl = document.getElementById('toast');
         const saveIndicator = document.getElementById('saveIndicator');
         const scheduleUrlInput = document.getElementById('scheduleUrl');
@@ -1457,105 +1471,43 @@
                     return;
                 }
 
-                // Reset lines
+                // Classify rows before validating names so missing players retain their positions.
+                const forwardRows = parsedLines.filter(row => row.length === 3);
+                const defenseRows = parsedLines.filter(row => row.length === 2);
+                const unsupportedRows = parsedLines.filter(row => row.length !== 2 && row.length !== 3);
+                if (forwardRows.length === 0 && defenseRows.length === 0) {
+                    importStatus.textContent = '⚠️ Use 3 names per forward line or 2 names per defense pair.';
+                    importStatus.className = 'import-status error';
+                    return;
+                }
+                if (forwardRows.length > 3 || defenseRows.length > 3) {
+                    importStatus.textContent = '⚠️ There is room for 3 forward lines and 3 defense pairs. Remove extra rows and import again.';
+                    importStatus.className = 'import-status error';
+                    return;
+                }
+
                 forwards = Array(9).fill(null);
                 defense = Array(6).fill(null);
-
-                // Track used players to prevent duplicates
-                const usedPlayers = new Set();
-
-                // --- FORWARD LINES (first 3 lines) ---
-                // Each forward line has up to 3 players
-                const forwardLineCount = Math.min(3, parsedLines.length);
-                for (let lineIndex = 0; lineIndex < forwardLineCount; lineIndex++) {
-                    const playersInRow = parsedLines[lineIndex];
-                    // Place up to 3 players in this forward line
-                    for (let col = 0; col < 3; col++) {
-                        if (col < playersInRow.length) {
-                            const name = playersInRow[col];
-                            if (allPlayers.includes(name) && !usedPlayers.has(name)) {
-                                forwards[lineIndex * 3 + col] = name;
-                                usedPlayers.add(name);
-                            }
-                        }
-                    }
-                }
-
-                // --- DEFENSE LINES (next 3 lines) ---
-                // Each defense line has up to 2 players
-                const defenseStartIndex = Math.min(3, parsedLines.length);
-                const defenseEndIndex = Math.min(6, parsedLines.length);
-                for (let lineIndex = defenseStartIndex; lineIndex < defenseEndIndex; lineIndex++) {
-                    const playersInRow = parsedLines[lineIndex];
-                    const defenseRow = lineIndex - 3;
-                    // Place up to 2 players in this defense line
-                    for (let col = 0; col < 2; col++) {
-                        if (col < playersInRow.length) {
-                            const name = playersInRow[col];
-                            if (allPlayers.includes(name) && !usedPlayers.has(name)) {
-                                defense[defenseRow * 2 + col] = name;
-                                usedPlayers.add(name);
-                            }
-                        }
-                    }
-                }
-
-                // --- EXTRA LINES (beyond 6 lines) ---
-                // Fill remaining empty spots with any extra players
-                if (parsedLines.length > 6) {
-                    let extraPlayers = [];
-                    for (let i = 6; i < parsedLines.length; i++) {
-                        extraPlayers = extraPlayers.concat(parsedLines[i]);
-                    }
-                    
-                    let extraIndex = 0;
-                    // Fill empty forward spots
-                    for (let i = 0; i < forwards.length && extraIndex < extraPlayers.length; i++) {
-                        if (!forwards[i]) {
-                            const name = extraPlayers[extraIndex];
-                            if (allPlayers.includes(name) && !usedPlayers.has(name)) {
-                                forwards[i] = name;
-                                usedPlayers.add(name);
-                            }
-                            extraIndex++;
-                        }
-                    }
-                    
-                    // Fill empty defense spots
-                    for (let i = 0; i < defense.length && extraIndex < extraPlayers.length; i++) {
-                        if (!defense[i]) {
-                            const name = extraPlayers[extraIndex];
-                            if (allPlayers.includes(name) && !usedPlayers.has(name)) {
-                                defense[i] = name;
-                                usedPlayers.add(name);
-                            }
-                            extraIndex++;
-                        }
-                    }
-                }
-
-                // Remove any remaining duplicates (shouldn't happen with usedPlayers tracking)
                 const finalUsed = new Set();
-                forwards = forwards.map(p => {
-                    if (p && finalUsed.has(p)) {
-                        return null;
-                    }
-                    if (p) finalUsed.add(p);
-                    return p;
-                });
-                defense = defense.map(p => {
-                    if (p && finalUsed.has(p)) {
-                        return null;
-                    }
-                    if (p) finalUsed.add(p);
-                    return p;
-                });
+                function placeRows(rows, target, columns) {
+                    rows.forEach((row, rowIndex) => {
+                        row.forEach((name, column) => {
+                            if (allPlayers.includes(name) && !finalUsed.has(name)) {
+                                target[rowIndex * columns + column] = name;
+                                finalUsed.add(name);
+                            }
+                        });
+                    });
+                }
+                placeRows(forwardRows, forwards, 3);
+                placeRows(defenseRows, defense, 2);
 
                 renderAll();
                 saveLines();
 
                 const totalPlaced = finalUsed.size;
-                const invalidMsg = invalidNames.length > 0 ? ` (${invalidNames.length} names skipped - not in roster)` : '';
+                const invalidMsg = (invalidNames.length > 0 ? ` (${invalidNames.length} names skipped - not in roster)` : '')
+                    + (unsupportedRows.length > 0 ? ` (${unsupportedRows.length} rows skipped - use 2 or 3 names per row)` : '');
                 importStatus.textContent = `✅ Imported ${totalPlaced} players from ${parsedLines.length} lines${invalidMsg}`;
                 importStatus.className = 'import-status success';
                 showToast(`✅ Lines imported! ${totalPlaced} players placed.`);
@@ -1750,6 +1702,11 @@
 
         // ----- RENDER -----
         function renderPlayerPool() {
+            const attendingCount = allPlayers.filter(name =>
+                playerStatusMap[name] === 0 && playerTypeMap[name] !== 'goalie'
+            ).length;
+            attendingCountEl.textContent = isLoading ? '… attending' : `${attendingCount} attending`;
+
             if (isLoading) {
                 playerListEl.innerHTML = `<div class="loading">Loading players...</div>`;
                 return;
