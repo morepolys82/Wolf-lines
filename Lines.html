@@ -1190,6 +1190,28 @@
             .brand-name small { letter-spacing: 0.22em; }
             .cell { min-height: 2.6rem; }
         }
+        /* The roster follows the line actions in the normal page flow. */
+        .main-grid { display: block; }
+        .lines-container { width: 100%; }
+        .player-pool-wrapper {
+            position: static;
+            z-index: auto;
+            align-self: auto;
+            flex: none;
+            width: 100%;
+            min-width: 0;
+            padding: 0;
+            background: transparent;
+        }
+        .player-pool { max-height: none; }
+        .player-list-scroll-wrapper {
+            flex: none;
+            min-height: 0;
+            max-height: none;
+            overflow: visible;
+            padding-right: 0;
+            margin-right: 0;
+        }
     </style>
 </head>
 <body>
@@ -1216,34 +1238,6 @@
     </div>
 
     <div class="main-grid" id="appContent">
-        <!-- PLAYER POOL - STICKY WITH HORIZONTAL WRAP -->
-        <div class="player-pool-wrapper">
-            <div class="player-pool">
-                <h2>
-                    <span>♟ Players</span>
-                    <span class="player-counts">
-                        <span class="pool-count attending-count" id="attendingCount" aria-live="polite" title="Attending skaters, excluding goalies">0 attending</span>
-                        <span class="pool-count" id="poolCount">0</span>
-                    </span>
-                </h2>
-                <div class="player-list-scroll-wrapper">
-                    <div id="playerList" class="player-list">
-                        <div class="loading">Loading players...</div>
-                    </div>
-                </div>
-                <div class="attendance-legend">
-                    <span class="legend-item"><span class="legend-dot green"></span> Attending</span>
-                    <span class="legend-item"><span class="legend-dot yellow"></span> Maybe</span>
-                    <span class="legend-item"><span class="legend-dot grey"></span> No answer</span>
-                    <span class="legend-item"><span class="legend-dot red"></span> Not attending</span>
-                    <span class="legend-item"><span class="legend-dot blue"></span> Goalie</span>
-                </div>
-                <div class="pool-actions">
-                    <button id="resetPlayersBtn" class="reset-btn">↺ Reset roster</button>
-                </div>
-            </div>
-        </div>
-
         <!-- LINES -->
         <div class="lines-container">
             <!-- FORWARDS -->
@@ -1272,6 +1266,34 @@
                 <button id="autoBtn" class="reset-btn auto-btn">⤨ Generate lines</button>
                 <button id="copyBtn" class="reset-btn copy-btn">📋 Copy</button>
                 <button id="clearAllBtn" class="reset-btn clear-btn">🧹 Clear all</button>
+            </div>
+
+            <!-- PLAYER ROSTER -->
+            <div class="player-pool-wrapper">
+                <div class="player-pool">
+                    <h2>
+                        <span>♟ Players</span>
+                        <span class="player-counts">
+                            <span class="pool-count attending-count" id="attendingCount" aria-live="polite" title="Attending skaters, excluding goalies">0 attending</span>
+                            <span class="pool-count" id="poolCount">0</span>
+                        </span>
+                    </h2>
+                    <div class="player-list-scroll-wrapper">
+                        <div id="playerList" class="player-list">
+                            <div class="loading">Loading players...</div>
+                        </div>
+                    </div>
+                    <div class="attendance-legend">
+                        <span class="legend-item"><span class="legend-dot green"></span> Attending</span>
+                        <span class="legend-item"><span class="legend-dot yellow"></span> Maybe</span>
+                        <span class="legend-item"><span class="legend-dot grey"></span> No answer</span>
+                        <span class="legend-item"><span class="legend-dot red"></span> Not attending</span>
+                        <span class="legend-item"><span class="legend-dot blue"></span> Goalie</span>
+                    </div>
+                    <div class="pool-actions">
+                        <button id="resetPlayersBtn" class="reset-btn">↺ Reset roster</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
