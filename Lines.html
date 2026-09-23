@@ -324,6 +324,21 @@
             padding: 0.2rem 0;
             align-content: flex-start;
         }
+        .player-group-divider {
+            flex: 0 0 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #a9c4d4;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.1rem 0.2rem 0;
+        }
+        .player-group-divider::after {
+            content: '';
+            flex: 1;
+            border-top: 1px solid #3a5064;
+        }
         .player-item {
             padding: 0.2rem 0.7rem;
             border-radius: 2rem;
@@ -967,8 +982,8 @@
             <input type="text" id="teamNameInput" placeholder="Team name to filter..." value="Wolfpac" />
         </div>
         <div class="settings-row">
-            <label for="scheduleUrl">📡 Schedule URL:</label>
-            <input type="text" id="scheduleUrl" placeholder="Paste schedule API URL here..." value="https://canlan2-api.sportninja.net/v1/schedules/btm5NkDxsGpcoJaz/games?order=asc&exclude_cancelled_games=1&team_id=GAFNqGN5d9OKsYdO&include_officials=1&starts_after=2026-08-31T10:00:00.000Z&starts_before=2027-01-01T12:00:00.000Z&page=1" />
+            <label for="scheduleUrl">📡 Team page URL:</label>
+            <input type="text" id="scheduleUrl" placeholder="Paste SportNinja team page URL..." value="https://canlanstats.sportninja.com/team/GAFNqGN5d9OKsYdO?Division=sQpk9vQgFUUHAl3j&amp;sn_schedule=btm5NkDxsGpcoJaz&amp;sn_starts_at=2026-09-01&amp;sn_ends_at=2027-04-30" />
             <button id="updateScheduleBtn" class="update-btn">🔄 Update</button>
         </div>
         <div id="settingsStatus" class="settings-status">Ready</div>
@@ -1001,7 +1016,7 @@
         const STORAGE_KEY_TEAM = 'wolfpac_team_name';
 
         // ----- DEFAULT VALUES -----
-        const DEFAULT_SCHEDULE_URL = 'https://canlan2-api.sportninja.net/v1/schedules/btm5NkDxsGpcoJaz/games?order=asc&exclude_cancelled_games=1&team_id=GAFNqGN5d9OKsYdO&include_officials=1&starts_after=2026-08-31T10%3A00%3A00.000Z&starts_before=2027-01-01T12%3A00%3A00.000Z&page=1';
+        const DEFAULT_SCHEDULE_URL = 'https://canlanstats.sportninja.com/team/GAFNqGN5d9OKsYdO?Division=sQpk9vQgFUUHAl3j&sn_schedule=btm5NkDxsGpcoJaz&sn_starts_at=2026-09-01&sn_ends_at=2027-04-30';
         const DEFAULT_TEAM_NAME = 'Wolfpac';
         const GAME_API_BASE = 'https://canlan2-api.sportninja.net/v1/games/';
 
@@ -1009,6 +1024,7 @@
         let allPlayers = [];
         let playerStatusMap = {};
         let playerTypeMap = {};
+        let playerPositionMap = {};
         let forwards = Array(9).fill(null);
         let defense = Array(6).fill(null);
         let isLoading = true;
@@ -1118,7 +1134,20 @@
 
         function loadUrl() {
             try {
-                return localStorage.getItem(STORAGE_KEY_URL) || DEFAULT_SCHEDULE_URL;
+                const savedUrl = localStorage.getItem(STORAGE_KEY_URL);
+                if (!savedUrl) return DEFAULT_SCHEDULE_URL;
+
+                // Replace the API URL used by older versions of this app with
+                // the shareable team page URL, while keeping user-supplied URLs.
+                const saved = new URL(savedUrl);
+                if (saved.hostname === 'canlan2-api.sportninja.net' &&
+                    saved.pathname === '/v1/schedules/btm5NkDxsGpcoJaz/games' &&
+                    saved.searchParams.get('team_id') === 'GAFNqGN5d9OKsYdO' &&
+                    saved.searchParams.get('starts_before') === '2027-01-01T12:00:00.000Z') {
+                    localStorage.setItem(STORAGE_KEY_URL, DEFAULT_SCHEDULE_URL);
+                    return DEFAULT_SCHEDULE_URL;
+                }
+                return savedUrl;
             } catch (e) {
                 return DEFAULT_SCHEDULE_URL;
             }
@@ -1185,7 +1214,7 @@
         function displayGameInfo(game) {
             const homeTeam = game.homeTeam ? game.homeTeam.name : 'TBD';
             const awayTeam = game.visitingTeam ? game.visitingTeam.name : 'TBD';
-            const isTeamHome = game.homeTeam && game.homeTeam.name === teamName;
+            const isTeamHome = game.homeTeam && sameTeamName(game.homeTeam.name, teamName);
             const opponent = isTeamHome ? awayTeam : homeTeam;
             const location = isTeamHome ? '🏠 Home' : '✈️ Away';
             const rink = game.venue ? game.venue.name : 'TBD';
@@ -1202,6 +1231,46 @@
             `;
         }
 
+        // Accept the shareable team page as well as previously saved API links.
+        function resolveScheduleUrl(input) {
+            let source;
+            try { source = new URL(input); }
+            catch { throw new Error('Paste a complete SportNinja team page URL.'); }
+            if (source.protocol !== 'https:') throw new Error('Please use an HTTPS SportNinja URL.');
+            if (source.hostname === 'canlan2-api.sportninja.net' && /^\/v1\/schedules\/[^/]+\/games\/?$/.test(source.pathname)) {
+                return source.href;
+            }
+            const teamPath = source.pathname.match(/^\/team\/([^/]+)\/?$/);
+            if (source.hostname !== 'canlanstats.sportninja.com' || !teamPath) {
+                throw new Error('Use the Canlan SportNinja team page URL.');
+            }
+            const schedule = source.searchParams.get('sn_schedule');
+            if (!schedule) throw new Error('Select a season on the team page, then copy its URL (it must include sn_schedule).');
+            const api = new URL(`https://canlan2-api.sportninja.net/v1/schedules/${encodeURIComponent(schedule)}/games`);
+            api.search = new URLSearchParams({order: 'asc', exclude_cancelled_games: '1', team_id: decodeURIComponent(teamPath[1]), include_officials: '1', page: '1'});
+            for (const [parameter, filter, inclusiveEnd] of [
+                ['sn_starts_at', 'starts_after', false],
+                ['sn_ends_at', 'starts_before', true]
+            ]) {
+                const value = source.searchParams.get(parameter);
+                if (!value) continue;
+                const date = new Date(`${value}T00:00:00.000Z`);
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+                    throw new Error('The team page URL contains an invalid season date.');
+                }
+                if (inclusiveEnd) date.setUTCDate(date.getUTCDate() + 1);
+                api.searchParams.set(filter, date.toISOString());
+            }
+            if (api.searchParams.has('starts_after') && api.searchParams.has('starts_before') && api.searchParams.get('starts_after') >= api.searchParams.get('starts_before')) {
+                throw new Error('The season end date must be on or after its start date.');
+            }
+            return api.href;
+        }
+
+        function sameTeamName(left, right) {
+            return typeof left === 'string' && left.trim().toLowerCase() === right.trim().toLowerCase();
+        }
+
         // ----- FETCH SCHEDULE AND EXTRACT TEAM GAMES -----
         async function fetchSchedule(url, team, selectIndex = -1) {
             const statusEl = settingsStatusEl;
@@ -1215,18 +1284,26 @@
                 refreshScheduleBtn.classList.add('loading');
                 refreshScheduleBtn.textContent = '⏳';
 
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                const data = await response.json();
-                
-                if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
-                    throw new Error('No games found in schedule');
-                }
+                const apiUrl = new URL(resolveScheduleUrl(url));
+                const games = [];
+                let page = Number(apiUrl.searchParams.get('page') || 1);
+                let totalPages = page;
+                do {
+                    apiUrl.searchParams.set('page', String(page));
+                    const response = await fetch(apiUrl.href);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    const data = await response.json();
+                    if (!Array.isArray(data.data)) throw new Error('Invalid schedule response');
+                    games.push(...data.data);
+                    totalPages = Number(data.meta?.pagination?.total_pages || page);
+                    page++;
+                } while (page <= totalPages);
+                if (games.length === 0) throw new Error('No games found in schedule');
 
                 teamGames = [];
-                for (const game of data.data) {
-                    const isTeamHome = game.homeTeam && game.homeTeam.name === team;
-                    const isTeamAway = game.visitingTeam && game.visitingTeam.name === team;
+                for (const game of games) {
+                    const isTeamHome = game.homeTeam && sameTeamName(game.homeTeam.name, team);
+                    const isTeamAway = game.visitingTeam && sameTeamName(game.visitingTeam.name, team);
                     
                     if (isTeamHome || isTeamAway) {
                         teamGames.push(game);
@@ -1306,7 +1383,7 @@
                 let teamRoster = null;
                 
                 for (const roster of playerRosters) {
-                    if (roster.team && roster.team.name === teamName) {
+                    if (roster.team && sameTeamName(roster.team.name, teamName)) {
                         teamRoster = roster;
                         break;
                     }
@@ -1324,6 +1401,7 @@
                 const newPlayers = [];
                 const newStatusMap = {};
                 const newTypeMap = {};
+                const newPositionMap = {};
                 
                 players.forEach(p => {
                     const firstName = p.name_first;
@@ -1333,6 +1411,7 @@
                         
                         const isGoalie = p.player_type && p.player_type.is_goalie === 1;
                         newTypeMap[firstName] = isGoalie ? 'goalie' : 'skater';
+                        newPositionMap[firstName] = p.player_type?.abbreviation || null;
                     }
                 });
 
@@ -1358,6 +1437,7 @@
                 allPlayers = newPlayers;
                 playerStatusMap = newStatusMap;
                 playerTypeMap = newTypeMap;
+                playerPositionMap = newPositionMap;
 
                 saveLines();
 
@@ -1536,12 +1616,6 @@
         // ----- SORT PLAYERS BY STATUS (goalie at bottom) -----
         function sortPlayersByStatus(players) {
             return players.slice().sort((a, b) => {
-                const isGoalieA = playerTypeMap[a] === 'goalie';
-                const isGoalieB = playerTypeMap[b] === 'goalie';
-                
-                if (isGoalieA && !isGoalieB) return 1;
-                if (!isGoalieA && isGoalieB) return -1;
-                
                 const statusA = playerStatusMap[a];
                 const statusB = playerStatusMap[b];
                 
@@ -1552,8 +1626,15 @@
                     if (status === 1) return 3;
                     return 2;
                 };
-                
-                return getPriority(statusA) - getPriority(statusB);
+
+                const statusDifference = getPriority(statusA) - getPriority(statusB);
+                if (statusDifference !== 0) return statusDifference;
+                const goalieDifference = Number(playerTypeMap[a] === 'goalie') - Number(playerTypeMap[b] === 'goalie');
+                if (goalieDifference !== 0) return goalieDifference;
+                if (statusA === 0) {
+                    return Number(playerPositionMap[a] === 'D') - Number(playerPositionMap[b] === 'D');
+                }
+                return 0;
             });
         }
 
@@ -1564,38 +1645,39 @@
                 return;
             }
             
-            const skaters = allPlayers.filter(name => playerTypeMap[name] !== 'goalie');
-            
-            if (skaters.length === 0) {
-                showToast('⚠️ No skaters available. Goalies cannot be placed on lines.');
+            const attendingPlayers = allPlayers.filter(name => playerStatusMap[name] === 0);
+            const forwardsOnly = attendingPlayers.filter(name => playerPositionMap[name] === 'F');
+            const flexibleSkaters = attendingPlayers.filter(name => playerPositionMap[name] === 'D/F');
+            const defenseOnly = attendingPlayers.filter(name => playerPositionMap[name] === 'D');
+
+            if (forwardsOnly.length + flexibleSkaters.length + defenseOnly.length === 0) {
+                showToast('⚠️ No attending players with F, D/F, or D positions available.');
                 return;
             }
-            
+
+            function shuffle(players) {
+                for (let i = players.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [players[i], players[j]] = [players[j], players[i]];
+                }
+                return players;
+            }
+
             forwards = Array(9).fill(null);
             defense = Array(6).fill(null);
-            
-            let available = [...skaters];
-            for (let i = available.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [available[i], available[j]] = [available[j], available[i]];
-            }
-            
-            let playerIndex = 0;
-            for (let i = 0; i < forwards.length; i++) {
-                if (playerIndex < available.length) {
-                    forwards[i] = available[playerIndex++];
-                } else {
-                    break;
-                }
-            }
-            
-            for (let i = 0; i < defense.length; i++) {
-                if (playerIndex < available.length) {
-                    defense[i] = available[playerIndex++];
-                } else {
-                    break;
-                }
-            }
+
+            shuffle(forwardsOnly);
+            shuffle(flexibleSkaters);
+            shuffle(defenseOnly);
+
+            // F players have no defense option, so reserve forward slots for them first.
+            const forwardPlayers = [...forwardsOnly, ...flexibleSkaters].slice(0, forwards.length);
+            const flexibleForDefense = flexibleSkaters.slice(Math.max(0, forwards.length - forwardsOnly.length));
+            const defensePlayers = [...defenseOnly, ...flexibleForDefense].slice(0, defense.length);
+            shuffle(forwardPlayers);
+            shuffle(defensePlayers);
+            forwardPlayers.forEach((name, index) => { forwards[index] = name; });
+            defensePlayers.forEach((name, index) => { defense[index] = name; });
             
             renderAll();
             saveLines();
@@ -1733,10 +1815,25 @@
             const sortedAvailable = sortPlayersByStatus(available);
 
             let html = '';
+            let showedDefenseDivider = false;
+            let showedGoalieDivider = false;
+            let showedOtherDivider = false;
             sortedAvailable.forEach(name => {
                 const statusClass = getStatusClass(name);
                 const isGoalie = playerTypeMap[name] === 'goalie';
                 const displayName = isGoalie ? name : name;
+                if (!showedOtherDivider && playerStatusMap[name] !== 0) {
+                    html += '<div class="player-group-divider" role="separator" aria-label="Other responses">Other responses</div>';
+                    showedOtherDivider = true;
+                }
+                if (!showedDefenseDivider && playerStatusMap[name] === 0 && playerPositionMap[name] === 'D') {
+                    html += '<div class="player-group-divider" role="separator" aria-label="Attending defense">Defense</div>';
+                    showedDefenseDivider = true;
+                }
+                if (!showedGoalieDivider && playerStatusMap[name] === 0 && isGoalie) {
+                    html += '<div class="player-group-divider" role="separator" aria-label="Attending goalie">Goalie</div>';
+                    showedGoalieDivider = true;
+                }
                 html += `<div class="player-item ${statusClass}" data-name="${name}" data-status="${statusClass}">${displayName}</div>`;
             });
             playerListEl.innerHTML = html;
