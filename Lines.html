@@ -1226,8 +1226,25 @@
         @media (max-width: 899px) {
             .quick-tray { padding: 0.35rem 0.55rem 0.4rem; }
             .quick-tray-heading { margin-bottom: 0.2rem; }
-            .quick-tray-players { padding: 0 0 0.1rem; }
+            /* Keep a finger-sized swipe lane inside the native scroll area. */
+            .quick-tray-players {
+                padding: 0 0 44px;
+                background: linear-gradient(to top, rgba(103, 190, 224, 0.08) 0 40px, transparent 40px);
+                border-radius: 0.4rem;
+            }
+            .quick-tray::after {
+                content: '↔ Swipe here to scroll players';
+                position: absolute;
+                bottom: 1.1rem;
+                left: 0.55rem;
+                right: 0.55rem;
+                text-align: center;
+                color: #a9c5d2;
+                font-size: 0.65rem;
+                pointer-events: none;
+            }
             .quick-tray-players .player-item { min-height: 26px; }
+            body.tray-visible .app { padding-bottom: 9.5rem; }
         }
         @media (min-width: 900px) {
             .lines-container > .section, .lines-container > .footer { width: calc(100% - 210px); }
