@@ -889,13 +889,314 @@
             white-space: nowrap;
             touch-action: none;
         }
+
+        /* Arena scoreboard theme */
+        :root {
+            --arena-bg: #0b1118;
+            --arena-panel: #10212d;
+            --arena-panel-raised: #172c3b;
+            --arena-line: #31546b;
+            --arena-ice: #58c7e8;
+            --arena-text: #f4f8fb;
+            --arena-muted: #a3bdcf;
+        }
+        body {
+            background: radial-gradient(ellipse at 50% -15%, #15364a 0, var(--arena-bg) 55%);
+            color: var(--arena-text);
+            padding: 0;
+        }
+        .app {
+            max-width: 1100px;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 1.25rem clamp(0.65rem, 2.5vw, 1.75rem) 2rem;
+            color: var(--arena-text);
+        }
+        .app > h1 {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0 0 1.15rem;
+            padding: 0 0.15rem 0.85rem;
+            border-bottom: 1px solid var(--arena-line);
+        }
+        .brand-mark {
+            width: 3.65rem;
+            height: 3.65rem;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            filter: drop-shadow(0 0 10px rgba(88,199,232,.25));
+        }
+        .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+        .brand-mark[hidden] { display: none; }
+        .brand-name {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            color: #fff;
+            font-family: Impact, 'Arial Narrow', 'Segoe UI', sans-serif;
+            font-size: clamp(1.65rem, 5vw, 2.65rem);
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+        #brandTeamName { overflow-wrap: anywhere; }
+        .brand-name small {
+            margin: 0.4rem 0 0;
+            color: var(--arena-ice);
+            font-family: system-ui, sans-serif;
+            font-size: 0.42em;
+            font-weight: 650;
+            letter-spacing: 0.33em;
+            opacity: 1;
+            white-space: nowrap;
+        }
+        .save-indicator {
+            margin-left: auto;
+            color: var(--arena-muted);
+            white-space: nowrap;
+        }
+        .next-game-banner, .player-pool, .section, .settings-section, .import-section {
+            background: linear-gradient(145deg, #112635, #0e1d29 70%);
+            border: 1px solid var(--arena-line);
+            border-radius: 1rem;
+            box-shadow: inset 0 1px 0 rgba(129,207,237,.09), 0 8px 24px rgba(0,0,0,.18);
+        }
+        .next-game-banner {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            grid-template-areas: 'info nav' 'info refresh';
+            gap: 0.35rem 0.75rem;
+            padding: 0.9rem 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .next-game-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 15%;
+            width: 24%;
+            background: linear-gradient(115deg, transparent 25%, rgba(88,199,232,.045) 25%, rgba(88,199,232,.045) 50%, transparent 50%);
+            pointer-events: none;
+        }
+        .next-game-banner .game-info {
+            grid-area: info;
+            display: grid;
+            grid-template-columns: auto auto 1fr;
+            align-content: center;
+            align-items: center;
+            gap: 0.45rem 0.8rem;
+            min-width: 0;
+        }
+        .next-game-banner .game-info .label {
+            grid-column: 1 / -1;
+            font-size: 0.68rem;
+            letter-spacing: 0.15em;
+            color: var(--arena-muted);
+        }
+        .next-game-banner .game-info .teams {
+            grid-column: 1 / -1;
+            color: #fff;
+            font-family: Impact, 'Arial Narrow', 'Segoe UI', sans-serif;
+            font-size: clamp(1.05rem, 3vw, 1.45rem);
+            letter-spacing: 0.045em;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+        .next-game-banner .game-info .teams .vs {
+            color: var(--arena-ice);
+            font-family: system-ui, sans-serif;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        .next-game-banner .game-info .datetime { color: #d9e8f2; font-size: 0.72rem; }
+        .next-game-banner .game-info .rink {
+            color: var(--arena-muted);
+            background: none;
+            padding: 0;
+            font-size: 0.72rem;
+        }
+        .location-badge {
+            padding: 0.15rem 0.55rem;
+            border: 1px solid #34718d;
+            border-radius: 99px;
+            background: #17384a;
+            color: #c9edfa;
+            font-family: system-ui, sans-serif;
+            font-size: 0.66rem;
+            font-weight: 600;
+            letter-spacing: normal;
+            text-transform: none;
+        }
+        .next-game-banner .nav-section { grid-area: nav; justify-self: end; }
+        .next-game-banner .nav-btn {
+            width: 2rem;
+            height: 2rem;
+            background: #112637;
+            border-color: var(--arena-line);
+            color: #fff;
+        }
+        .next-game-banner .game-counter { color: var(--arena-muted); font-size: 0.7rem; }
+        .next-game-banner .refresh-btn {
+            grid-area: refresh;
+            justify-self: end;
+            align-self: end;
+            background: transparent;
+            border-color: var(--arena-line);
+            border-radius: 0.55rem;
+            color: var(--arena-muted);
+        }
+        .main-grid { gap: 1rem; }
+        .player-pool-wrapper {
+            top: 0.35rem;
+            background: var(--arena-bg);
+            padding: 0.15rem 0;
+            border-radius: 1rem;
+            box-shadow: none;
+        }
+        .player-pool { padding: 0.8rem; max-height: min(55vh, 420px); }
+        .player-pool h2 {
+            margin-bottom: 0.5rem;
+            border-color: var(--arena-line);
+            padding-bottom: 0.55rem;
+            color: #fff;
+            font-family: Impact, 'Arial Narrow', 'Segoe UI', sans-serif;
+            font-size: 1.15rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .pool-count { background: #233e51; color: #c3d9e8; }
+        .attending-count { background: transparent; color: #67ed99; font-family: system-ui, sans-serif; font-weight: 700; }
+        .player-list { gap: 0.4rem; }
+        .player-group-divider {
+            margin-top: 0.3rem;
+            padding: 0.35rem 0.15rem 0.1rem;
+            border-top: 1px solid var(--arena-line);
+            color: #dcebf3;
+            font-family: Impact, 'Arial Narrow', 'Segoe UI', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .player-group-divider::after { border-color: var(--arena-line); }
+        .player-item, .cell .player-item {
+            border-radius: 0.55rem;
+            font-weight: 650;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 2px 4px rgba(0,0,0,.25);
+        }
+        .player-item.status-0 { background: #155a36; border-color: #45db7d; }
+        .player-item.status-0:hover { background: #1a7144; border-color: #77f2a2; }
+        .player-item.status-2 { background: #735416; border-color: #dba934; }
+        .player-item.status-2:hover { background: #946d19; border-color: #f0c153; }
+        .player-item.status-null { background: #323d49; border-color: #687987; }
+        .player-item.status-null:hover { background: #455462; border-color: #8ba2b2; }
+        .player-item.status-1 { background: #722b2b; border-color: #d55050; }
+        .player-item.status-1:hover { background: #883434; border-color: #ed6d6d; }
+        .player-item.goalie { background: #1b3d72; border-color: #5099ee; }
+        .player-item.goalie:hover { background: #27508d; border-color: #79b5fa; }
+        .attendance-legend { border-color: var(--arena-line); color: var(--arena-muted); }
+        .legend-dot.green { background: #45db7d; }
+        .legend-dot.yellow { background: #dba934; }
+        .legend-dot.grey { background: #687987; }
+        .legend-dot.red { background: #d55050; }
+        .legend-dot.blue { background: #5099ee; }
+        .lines-container { gap: 1rem; }
+        .section { padding: 0.85rem; position: relative; overflow: hidden; }
+        .section::before {
+            content: '';
+            position: absolute;
+            inset: 3.5rem 0.6rem 0.5rem;
+            border: 2px solid rgba(88,199,232,.13);
+            border-radius: 45%;
+            pointer-events: none;
+        }
+        .section-header { position: relative; z-index: 1; align-items: center; }
+        .section-header h2 {
+            color: #fff;
+            font-family: Impact, 'Arial Narrow', 'Segoe UI', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .section-header h2::before {
+            content: '◩';
+            margin-right: 0.55rem;
+            color: var(--arena-ice);
+        }
+        .section-header span { background: #214056; color: #d1e9f5; border-radius: 0.55rem; }
+        .grid { position: relative; z-index: 1; gap: 0.45rem; }
+        .cell {
+            min-height: 3.25rem;
+            background: rgba(19,42,57,.82);
+            border: 1.5px dashed #6c9bb5;
+            border-radius: 0.7rem;
+            box-shadow: none;
+            color: #c9ddea;
+        }
+        .cell.drag-over { background: #214a60; border-color: var(--arena-ice); }
+        .empty-cell { color: #8db0c6; opacity: 1; font-size: 0.72rem; }
+        .footer { margin-top: 0.15rem; gap: 0.45rem; }
+        .reset-btn, .settings-section .update-btn, .import-section .import-btn,
+        .settings-section input, .import-section textarea {
+            border-radius: 0.65rem;
+        }
+        .reset-btn { background: #1b3445; border-color: #416b82; color: #e1eef5; }
+        .reset-btn:hover { background: #24465c; border-color: var(--arena-ice); }
+        .auto-btn, .auto-btn:hover {
+            background: #58c7e8;
+            border-color: #78ddf7;
+            color: #06202d;
+            font-weight: 800;
+        }
+        .copy-btn { background: #173747; border-color: var(--arena-ice); color: #bfefff; }
+        .clear-btn { background: #1b2935; border-color: #5b7180; color: #b8cbd6; }
+        .settings-section, .import-section { padding: 0.9rem; }
+        .settings-section label, .import-section label { color: var(--arena-muted); }
+        .settings-section input, .import-section textarea {
+            background: #0b1b26;
+            border-color: var(--arena-line);
+            color: #f2f7fa;
+        }
+        .settings-section input:focus, .import-section textarea:focus { border-color: var(--arena-ice); }
+        .settings-section .update-btn { background: #196584; border-color: var(--arena-ice); color: #fff; }
+        .settings-section .settings-status, .import-status { color: var(--arena-muted); }
+        .drag-ghost { background: #214055; border-color: var(--arena-ice); border-radius: 0.6rem; }
+        @media (max-width: 699px) {
+            .app { padding: 0.8rem 0.55rem 1.5rem; }
+            .app > h1 { gap: 0.6rem; }
+            .brand-mark { width: 3rem; height: 3rem; }
+            .brand-name { font-size: clamp(1.4rem, 6vw, 2rem); }
+            .save-indicator { font-size: 0.55rem; }
+            .next-game-banner { padding: 0.75rem; }
+            .next-game-banner .game-info { grid-template-columns: auto auto; }
+            .next-game-banner .game-info .datetime { grid-column: 1 / -1; }
+            .player-pool { max-height: min(65vh, 500px); padding: 0.65rem; }
+            .player-list-scroll-wrapper { max-height: none; }
+            .player-item { min-height: 29px; padding: 0.22rem 0.65rem; font-size: 0.76rem; }
+            .section { padding: 0.7rem 0.55rem 0.8rem; }
+            .cell { min-height: 2.9rem; }
+            .cell .player-item { border-radius: 0.5rem; }
+            .footer .reset-btn { padding: 0.5rem 0.4rem; font-size: 0.67rem; }
+        }
+        @media (max-width: 400px) {
+            .next-game-banner { grid-template-columns: minmax(0,1fr) auto; }
+            .next-game-banner .game-info .teams { font-size: 1rem; }
+            .next-game-banner .refresh-btn { font-size: 0.6rem; }
+            .brand-name small { letter-spacing: 0.22em; }
+            .cell { min-height: 2.6rem; }
+        }
     </style>
 </head>
 <body>
 <div class="app">
     <h1>
-        🐺 Wolfpac · Line Generator
-        <small>tap & drag</small>
+        <span class="brand-mark" id="teamLogoContainer" hidden><img id="teamLogo" alt=""></span>
+        <span class="brand-name"><span id="brandTeamName">Wolfpac</span><small>Line Generator</small></span>
         <span class="save-indicator" id="saveIndicator">
             <span class="dot"></span> Auto-saved
         </span>
@@ -919,7 +1220,7 @@
         <div class="player-pool-wrapper">
             <div class="player-pool">
                 <h2>
-                    <span>📋 Players</span>
+                    <span>♟ Players</span>
                     <span class="player-counts">
                         <span class="pool-count attending-count" id="attendingCount" aria-live="polite" title="Attending skaters, excluding goalies">0 attending</span>
                         <span class="pool-count" id="poolCount">0</span>
@@ -968,9 +1269,9 @@
             </div>
 
             <div class="footer">
-                <button id="autoBtn" class="reset-btn auto-btn">🎲 Auto Generate</button>
+                <button id="autoBtn" class="reset-btn auto-btn">⤨ Generate lines</button>
                 <button id="copyBtn" class="reset-btn copy-btn">📋 Copy</button>
-                <button id="clearAllBtn" class="reset-btn clear-btn">🧹 Clear all lines</button>
+                <button id="clearAllBtn" class="reset-btn clear-btn">🧹 Clear all</button>
             </div>
         </div>
     </div>
@@ -1050,6 +1351,9 @@
         const saveIndicator = document.getElementById('saveIndicator');
         const scheduleUrlInput = document.getElementById('scheduleUrl');
         const teamNameInput = document.getElementById('teamNameInput');
+        const brandTeamNameEl = document.getElementById('brandTeamName');
+        const teamLogoContainer = document.getElementById('teamLogoContainer');
+        const teamLogoEl = document.getElementById('teamLogo');
         const updateScheduleBtn = document.getElementById('updateScheduleBtn');
         const refreshScheduleBtn = document.getElementById('refreshScheduleBtn');
         const prevGameBtn = document.getElementById('prevGameBtn');
@@ -1169,6 +1473,13 @@
             }
         }
 
+        function updateTeamTitle() {
+            const name = teamNameInput.value.trim() || 'Team';
+            brandTeamNameEl.textContent = name;
+            document.title = `${name} · Line Generator`;
+            teamLogoContainer.hidden = !sameTeamName(name, teamName) || teamLogoEl.naturalWidth === 0;
+        }
+
         // ----- FORMAT DATE -----
         function formatGameDate(dateString) {
             const date = new Date(dateString);
@@ -1211,6 +1522,26 @@
         }
 
         // ----- DISPLAY GAME INFO -----
+        function displayTeamLogo(team) {
+            const image = team?.image;
+            const smallImage = image?.formats?.find(format => format.width === 200 && format.height === 200);
+            const imageUrl = smallImage?.full_path || image?.full_path;
+            teamLogoContainer.hidden = true;
+            teamLogoEl.removeAttribute('src');
+            if (!imageUrl) return;
+
+            try {
+                const url = new URL(imageUrl);
+                if (url.protocol !== 'https:' || url.hostname !== 'canlan-images-production.s3.amazonaws.com') return;
+                teamLogoEl.alt = `${team.name} logo`;
+                teamLogoEl.onload = () => { teamLogoContainer.hidden = false; };
+                teamLogoEl.onerror = () => { teamLogoContainer.hidden = true; };
+                teamLogoEl.src = url.href;
+            } catch (error) {
+                console.warn('Invalid team logo URL:', error);
+            }
+        }
+
         function displayGameInfo(game) {
             const homeTeam = game.homeTeam ? game.homeTeam.name : 'TBD';
             const awayTeam = game.visitingTeam ? game.visitingTeam.name : 'TBD';
@@ -1219,12 +1550,13 @@
             const location = isTeamHome ? '🏠 Home' : '✈️ Away';
             const rink = game.venue ? game.venue.name : 'TBD';
             const dateTime = formatGameDate(game.starts_at);
+            displayTeamLogo(isTeamHome ? game.homeTeam : game.visitingTeam);
 
             gameInfoEl.innerHTML = `
                 <span class="label">Game:</span>
                 <span class="teams">
                     ${teamName} <span class="vs">vs</span> ${opponent}
-                    <span style="font-size:0.6rem;background:#2a4a5a;padding:0.05rem 0.5rem;border-radius:1rem;margin-left:0.2rem;">${location}</span>
+                    <span class="location-badge">${location}</span>
                 </span>
                 <span class="datetime">${dateTime}</span>
                 <span class="rink">${rink}</span>
@@ -1277,6 +1609,8 @@
             const btn = updateScheduleBtn;
             
             try {
+                teamLogoContainer.hidden = true;
+                teamLogoEl.removeAttribute('src');
                 statusEl.textContent = '⏳ Fetching schedule...';
                 statusEl.className = 'settings-status';
                 btn.classList.add('loading');
@@ -1815,6 +2149,7 @@
             const sortedAvailable = sortPlayersByStatus(available);
 
             let html = '';
+            let showedSkaterDivider = false;
             let showedDefenseDivider = false;
             let showedGoalieDivider = false;
             let showedOtherDivider = false;
@@ -1825,6 +2160,10 @@
                 if (!showedOtherDivider && playerStatusMap[name] !== 0) {
                     html += '<div class="player-group-divider" role="separator" aria-label="Other responses">Other responses</div>';
                     showedOtherDivider = true;
+                }
+                if (!showedSkaterDivider && playerStatusMap[name] === 0 && !isGoalie && playerPositionMap[name] !== 'D') {
+                    html += '<div class="player-group-divider" role="separator" aria-label="Attending forwards and skaters">Forwards / skaters</div>';
+                    showedSkaterDivider = true;
                 }
                 if (!showedDefenseDivider && playerStatusMap[name] === 0 && playerPositionMap[name] === 'D') {
                     html += '<div class="player-group-divider" role="separator" aria-label="Attending defense">Defense</div>';
@@ -1860,7 +2199,7 @@
                     const displayName = isGoalie ? player : player;
                     content = `<div class="player-item ${statusClass}" data-name="${player}" data-cell-index="${i}" data-cell-type="forward">${displayName}</div>`;
                 } else {
-                    content = `<span class="empty-cell">⬇ drop</span>`;
+                    content = `<span class="empty-cell">＋ Drop player</span>`;
                 }
                 html += `<div class="cell" data-cell-type="forward" data-index="${i}">${content}</div>`;
             }
@@ -1879,7 +2218,7 @@
                     const displayName = isGoalie ? player : player;
                     content = `<div class="player-item ${statusClass}" data-name="${player}" data-cell-index="${i}" data-cell-type="defense">${displayName}</div>`;
                 } else {
-                    content = `<span class="empty-cell">⬇ drop</span>`;
+                    content = `<span class="empty-cell">＋ Drop player</span>`;
                 }
                 html += `<div class="cell" data-cell-type="defense" data-index="${i}">${content}</div>`;
             }
@@ -2191,6 +2530,8 @@
             const savedTeam = loadTeamName();
             scheduleUrlInput.value = savedUrl;
             teamNameInput.value = savedTeam;
+            updateTeamTitle();
+            teamNameInput.addEventListener('input', updateTeamTitle);
             
             resetBtn.addEventListener('click', resetRoster);
             clearAllBtn.addEventListener('click', clearAllLines);
