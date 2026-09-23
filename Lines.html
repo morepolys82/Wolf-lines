@@ -1014,6 +1014,14 @@
             font-size: 0.8rem;
         }
         .next-game-banner .game-info .datetime { color: #d9e8f2; font-size: 0.72rem; }
+        .game-date-row {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.35rem 0.75rem;
+        }
+        .game-attending-count { color: #67ed99; font-size: 0.72rem; font-weight: 700; }
         .next-game-banner .game-info .rink {
             color: var(--arena-muted);
             background: none;
@@ -1166,6 +1174,72 @@
         .settings-section .update-btn { background: #196584; border-color: var(--arena-ice); color: #fff; }
         .settings-section .settings-status, .import-status { color: var(--arena-muted); }
         .drag-ghost { background: #214055; border-color: var(--arena-ice); border-radius: 0.6rem; }
+        .quick-tray {
+            position: fixed;
+            inset: auto 0.55rem 0.55rem;
+            z-index: 150;
+            padding: 0.55rem 0.65rem 0.6rem;
+            background: #102635;
+            border: 1px solid #48819b;
+            border-radius: 0.85rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,.55);
+        }
+        .quick-tray[hidden] { display: none; }
+        .quick-tray-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.35rem;
+            color: #dff3fa;
+            font-size: 0.68rem;
+        }
+        .quick-tray-heading strong { text-transform: uppercase; letter-spacing: 0.08em; }
+        .quick-tray-heading span { color: #67ed99; white-space: nowrap; }
+        .quick-tray-players {
+            display: flex;
+            gap: 0.4rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #48819b transparent;
+            touch-action: pan-x;
+            padding: 0.1rem 0 0.35rem;
+        }
+        .quick-tray-players .player-item {
+            flex: 0 0 auto;
+            min-height: 28px;
+            padding: 0.2rem 0.65rem;
+            touch-action: pan-x;
+        }
+        .quick-tray-group {
+            flex: 0 0 auto;
+            align-self: center;
+            color: #a9c5d2;
+            font-size: 0.65rem;
+            font-weight: 700;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        body.tray-visible .app { padding-bottom: 6.5rem; }
+        @media (max-width: 899px) {
+            .quick-tray { padding: 0.35rem 0.55rem 0.4rem; }
+            .quick-tray-heading { margin-bottom: 0.2rem; }
+            .quick-tray-players { padding: 0 0 0.1rem; }
+            .quick-tray-players .player-item { min-height: 26px; }
+        }
+        @media (min-width: 900px) {
+            .lines-container > .section, .lines-container > .footer { width: calc(100% - 210px); }
+            .quick-tray {
+                inset: 14.5rem max(0.55rem, calc((100vw - 1100px) / 2 + 0.8rem)) auto auto;
+                width: 195px;
+                max-height: min(65vh, 440px);
+            }
+            .quick-tray-players { flex-wrap: wrap; overflow-y: auto; max-height: min(54vh, 350px); }
+            .quick-tray-group { flex-basis: 100%; margin-top: 0.3rem; }
+            body.tray-visible .app { padding-bottom: 2rem; }
+        }
         @media (max-width: 699px) {
             .app { padding: 0.8rem 0.55rem 1.5rem; }
             .app > h1 { gap: 0.6rem; }
@@ -1298,6 +1372,11 @@
         </div>
     </div>
 
+    <div id="quickTray" class="quick-tray" aria-label="Players available to drag into lines" hidden>
+        <div class="quick-tray-heading"><strong>Players</strong><span id="quickTrayCount">0 available</span></div>
+        <div id="quickTrayPlayers" class="quick-tray-players"></div>
+    </div>
+
     <!-- SETTINGS SECTION - BOTTOM -->
     <div class="settings-section" style="margin-top: 1.5rem;">
         <div class="settings-row">
@@ -1369,6 +1448,9 @@
         const autoBtn = document.getElementById('autoBtn');
         const poolCountEl = document.getElementById('poolCount');
         const attendingCountEl = document.getElementById('attendingCount');
+        const quickTrayEl = document.getElementById('quickTray');
+        const quickTrayCountEl = document.getElementById('quickTrayCount');
+        const quickTrayPlayersEl = document.getElementById('quickTrayPlayers');
         const toastEl = document.getElementById('toast');
         const saveIndicator = document.getElementById('saveIndicator');
         const scheduleUrlInput = document.getElementById('scheduleUrl');
@@ -1392,6 +1474,8 @@
         // ----- DRAG STATE -----
         let dragState = {
             isDragging: false,
+            scrollingTray: false,
+            fromQuickTray: false,
             element: null,
             name: null,
             sourceType: null,
@@ -1580,7 +1664,7 @@
                     ${teamName} <span class="vs">vs</span> ${opponent}
                     <span class="location-badge">${location}</span>
                 </span>
-                <span class="datetime">${dateTime}</span>
+                <span class="game-date-row"><span class="datetime">${dateTime}</span><span class="game-attending-count" id="gameAttendingCount">… attending</span></span>
                 <span class="rink">${rink}</span>
             `;
         }
@@ -2144,6 +2228,8 @@
                 playerStatusMap[name] === 0 && playerTypeMap[name] !== 'goalie'
             ).length;
             attendingCountEl.textContent = isLoading ? '… attending' : `${attendingCount} attending`;
+            const gameAttendingCountEl = document.getElementById('gameAttendingCount');
+            if (gameAttendingCountEl) gameAttendingCountEl.textContent = isLoading ? '… attending' : `${attendingCount} attending`;
 
             if (isLoading) {
                 playerListEl.innerHTML = `<div class="loading">Loading players...</div>`;
@@ -2289,6 +2375,8 @@
             document.body.appendChild(ghost);
 
             dragState.isDragging = false;
+            dragState.scrollingTray = false;
+            dragState.fromQuickTray = Boolean(el.closest('#quickTray'));
             dragState.element = el;
             dragState.name = name;
             dragState.sourceType = sourceType;
@@ -2314,6 +2402,13 @@
             const dx = touch.clientX - dragState.startX;
             const dy = touch.clientY - dragState.startY;
             const distance = Math.sqrt(dx * dx + dy * dy);
+            if (dragState.scrollingTray) return;
+            if (dragState.fromQuickTray && !dragState.isDragging &&
+                Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+                dragState.scrollingTray = true;
+                dragState.element.classList.remove('drag-source');
+                return;
+            }
 
             if (distance > 10 && !dragState.isDragging) {
                 dragState.isDragging = true;
@@ -2380,6 +2475,7 @@
         }
 
         function onTouchEnd(e) {
+            const wasScrollingTray = dragState.scrollingTray;
             if (dragState.isDragging) {
                 const touch = e.changedTouches ? e.changedTouches[0] : null;
                 if (touch) {
@@ -2403,8 +2499,10 @@
                 }
             }
             cleanupDrag();
-            renderAll();
-            saveLines();
+            if (!wasScrollingTray) {
+                renderAll();
+                saveLines();
+            }
             document.removeEventListener('touchmove', onTouchMove);
             document.removeEventListener('touchend', onTouchEnd);
             document.removeEventListener('touchcancel', onTouchEnd);
@@ -2482,6 +2580,8 @@
             }
             document.querySelectorAll('.cell').forEach(c => c.classList.remove('drag-over'));
             dragState.isDragging = false;
+            dragState.scrollingTray = false;
+            dragState.fromQuickTray = false;
             dragState.element = null;
             dragState.name = null;
             dragState.sourceType = null;
@@ -2492,6 +2592,53 @@
         function renderAll() {
             renderPlayerPool();
             renderGrids();
+            renderQuickTray();
+        }
+
+        function renderQuickTray() {
+            const placedNames = new Set([...forwards, ...defense].filter(Boolean));
+            const groups = [
+                { label: 'Attending', matches: name => playerTypeMap[name] !== 'goalie' && playerStatusMap[name] === 0 },
+                { label: 'Maybe', matches: name => playerTypeMap[name] !== 'goalie' && playerStatusMap[name] === 2 },
+                { label: 'No reply', matches: name => playerTypeMap[name] !== 'goalie' && playerStatusMap[name] == null },
+                { label: 'Not attending', matches: name => playerTypeMap[name] !== 'goalie' && playerStatusMap[name] === 1 },
+                { label: 'Goalie', matches: name => playerTypeMap[name] === 'goalie' }
+            ];
+            const available = allPlayers.filter(name => !placedNames.has(name));
+            quickTrayEl.dataset.hasPlayers = String(!isLoading && available.length > 0);
+            quickTrayCountEl.textContent = `${available.length} available`;
+            const previousScroll = quickTrayPlayersEl.scrollLeft;
+            const chips = [];
+            groups.forEach(group => {
+                const players = available.filter(group.matches);
+                if (players.length === 0) return;
+                const label = document.createElement('span');
+                label.className = 'quick-tray-group';
+                label.textContent = group.label;
+                chips.push(label);
+                players.forEach(name => {
+                    const el = document.createElement('div');
+                    el.className = `player-item ${getStatusClass(name)}`;
+                    el.dataset.name = name;
+                    el.textContent = name;
+                    el.addEventListener('mousedown', onDragStart);
+                    el.addEventListener('touchstart', onDragStart, { passive: false });
+                    chips.push(el);
+                });
+            });
+            quickTrayPlayersEl.replaceChildren(...chips);
+            quickTrayPlayersEl.scrollLeft = previousScroll;
+            updateQuickTrayVisibility();
+        }
+
+        function updateQuickTrayVisibility() {
+            const lines = document.querySelector('.lines-container').getBoundingClientRect();
+            const roster = document.querySelector('.player-pool-wrapper').getBoundingClientRect();
+            const show = quickTrayEl.dataset.hasPlayers === 'true' &&
+                lines.top < window.innerHeight - 80 && lines.bottom > 80 &&
+                roster.top > window.innerHeight - 140;
+            quickTrayEl.hidden = !show;
+            document.body.classList.toggle('tray-visible', show);
         }
 
         function resetRoster() {
@@ -2554,6 +2701,8 @@
             teamNameInput.value = savedTeam;
             updateTeamTitle();
             teamNameInput.addEventListener('input', updateTeamTitle);
+            window.addEventListener('scroll', updateQuickTrayVisibility, { passive: true });
+            window.addEventListener('resize', updateQuickTrayVisibility);
             
             resetBtn.addEventListener('click', resetRoster);
             clearAllBtn.addEventListener('click', clearAllLines);
