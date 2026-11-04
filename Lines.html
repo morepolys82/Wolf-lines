@@ -1424,7 +1424,7 @@
 </div>
 
 <!-- Toast notification -->
-<div id="toast" class="toast">✅ Copied to clipboard!</div>
+<div id="toast" class="toast" role="status"></div>
 
 <script>
     (function() {
@@ -1454,6 +1454,8 @@
         let currentGameIndex = -1;
         let nextGameData = null;
         let rosterRequest = 0;
+        let rosterLoading = false;
+        let attendanceSnapshot = null;
         let hasLoadedSavedLines = false;
 
         // DOM refs
@@ -1870,20 +1872,24 @@
         }
 
         // ----- FETCH GAME ROSTER -----
-        async function fetchGameRoster(gameId, preserveLines = false) {
+        async function fetchGameRoster(gameId, preserveLines = false, background = false) {
             const url = GAME_API_BASE + gameId;
             const statusEl = settingsStatusEl;
             const request = ++rosterRequest;
+            rosterLoading = true;
             
             try {
-                statusEl.textContent = '⏳ Fetching roster...';
-                statusEl.className = 'settings-status';
+                if (!background) {
+                    statusEl.textContent = '⏳ Fetching roster...';
+                    statusEl.className = 'settings-status';
+                }
 
                 const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 const data = await response.json();
                 if (request !== rosterRequest) return;
-                if (nextGameData?.fromCalendar && data.data?.id === gameId) {
+                if (background && (document.hidden || dragState.element)) return;
+                if (!background && nextGameData?.fromCalendar && data.data?.id === gameId) {
                     displayGameInfo(data.data);
                 }
                 
@@ -1905,6 +1911,20 @@
                 if (players.length === 0) {
                     throw new Error(`No players found for "${teamName}"`);
                 }
+
+                const previous = attendanceSnapshot?.gameId === gameId && attendanceSnapshot.team === teamName
+                    ? attendanceSnapshot.statuses : null;
+                const statuses = new Map(players.map(player => [player.id, player.attendance_status ?? null]));
+                const labels = ['Attending', 'Not attending', 'Maybe'];
+                const changes = previous ? players.flatMap(player => {
+                    const status = statuses.get(player.id);
+                    if (!previous.has(player.id) || previous.get(player.id) === status) return [];
+                    const name = [player.name_first, player.name_last].filter(Boolean).join(' ');
+                    return [`${name} → ${labels[status] ?? 'No reply'}`];
+                }) : [];
+                attendanceSnapshot = { gameId, team: teamName, statuses };
+                if (background && changes.length === 0 && previous?.size === statuses.size &&
+                    [...statuses.keys()].every(id => previous.has(id))) return;
                 
                 const newPlayers = [];
                 const newStatusMap = {};
@@ -1955,14 +1975,30 @@
                 
                 isLoading = false;
                 renderAll();
-                showToast(`✅ Roster loaded! ${allPlayers.length} players. Lines preserved.`);
+                if (changes.length) {
+                    const summary = changes.slice(0, 3).join(' · ');
+                    const more = changes.length > 3 ? ` · ${changes.length - 3} more` : '';
+                    showToast(`Attendance updated · ${summary}${more}`, 8000);
+                } else if (!background) {
+                    showToast(`✅ Roster loaded! ${allPlayers.length} players. Lines preserved.`);
+                }
             } catch (error) {
-                if (request !== rosterRequest) return;
+                if (request !== rosterRequest || background) return;
                 console.error('Error fetching roster:', error);
                 statusEl.textContent = `❌ Roster error: ${error.message}`;
                 statusEl.className = 'settings-status error';
                 playerListEl.innerHTML = `<div class="empty-pool-msg">⚠️ Failed to load roster. ${error.message}</div>`;
                 showToast('❌ Failed to load roster');
+            } finally {
+                if (request === rosterRequest) rosterLoading = false;
+            }
+        }
+
+        function checkAttendance() {
+            const gameId = nextGameData?.id;
+            if (document.hidden || rosterLoading || dragState.element || refreshScheduleBtn.classList.contains('loading')) return;
+            if (gameId && attendanceSnapshot?.gameId === gameId && attendanceSnapshot.team === teamName) {
+                fetchGameRoster(gameId, true, true);
             }
         }
 
@@ -2282,13 +2318,13 @@
 
         let toastTimeout = null;
 
-        function showToast(message) {
+        function showToast(message, duration = 2500) {
             toastEl.textContent = message;
             toastEl.classList.add('show');
             clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => {
                 toastEl.classList.remove('show');
-            }, 2500);
+            }, duration);
         }
 
         // ----- RENDER -----
@@ -2814,6 +2850,8 @@
             }
 
             await fetchSchedule(savedUrl, savedTeam, -1);
+            setInterval(checkAttendance, 30_000);
+            document.addEventListener('visibilitychange', checkAttendance);
         }
 
         init();
